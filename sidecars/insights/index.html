@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Context Insights</title>
+<script src="/preload.js"></script>
+<style>
+  :root {
+    --fg: var(--foreground, #333);
+    --bg: var(--background, #fafafa);
+    --card: color-mix(in srgb, var(--fg) 5%, transparent);
+    --line: color-mix(in srgb, var(--fg) 13%, transparent);
+    --mute: color-mix(in srgb, var(--fg) 58%, transparent);
+    --accent: #5b8def; --bad: #e5714f; --good: #4f9d69;
+    --c-base:#6b7280; --c-user:#4f9d69; --c-system:#8c8c8c; --c-reasoning:#a678de; --c-answer:#3fb6c9; --c-toolCalls:#e0a43a;
+    --c-commands:#e5714f; --c-files:#5b8def; --c-edits:#d65d9a; --c-search:#6aa84f; --c-mcp:#b08968; --c-other:#9aa5b1;
+  }
+  * { box-sizing: border-box; }
+  body { font: 12.5px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
+  header { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 8px 14px; background: var(--bg); border-bottom: 1px solid var(--line); }
+  header h1 { font-size: 14px; margin: 0 6px 0 0; }
+  .tabs, .seg { display: inline-flex; gap: 2px; background: var(--card); padding: 2px; border-radius: 8px; flex-wrap: wrap; }
+  .seg { padding: 1px; }
+  button, select, input, textarea { font: inherit; color: inherit; }
+  button { background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+  select, input, textarea { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 3px 8px; }
+  textarea { width: 100%; min-height: 110px; resize: vertical; font-family: ui-monospace, monospace; font-size: 12px; }
+  input[type=number] { width: 110px; }
+  button:hover { background: var(--card); }
+  button.on { background: var(--bg); border-color: var(--line); font-weight: 600; }
+  button.ghost { border-color: var(--line); }
+  button.pri { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .grow { flex: 1; }
+  main { padding: 14px; display: grid; gap: 12px; max-width: 1100px; margin: 0 auto; }
+  main > *, .cols > *, .kpis > * { min-width: 0; }
+  .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; }
+  .card h2 { margin: 0 0 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--mute); font-weight: 600;
+    display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .kpi .v { font-size: 20px; font-weight: 650; letter-spacing: -.01em; }
+  .kpi .l, .kpi .s, .mute { color: var(--mute); }
+  .kpi .s { font-size: 11px; }
+  .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); gap: 12px; }
+  .stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--line); }
+  .stack > i { display: block; height: 100%; }
+  .stack > i.free { background: repeating-linear-gradient(45deg, transparent 0 4px, var(--line) 4px 5px); }
+  .legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 3px 14px; margin-top: 9px; }
+  .legend div { display: flex; align-items: center; gap: 6px; white-space: nowrap; min-width: 0; }
+  .legend em { font-style: normal; overflow: hidden; text-overflow: ellipsis; }
+  .legend b { margin-left: auto; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .dot { width: 9px; height: 9px; border-radius: 3px; flex: none; display: inline-block; }
+  .row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: 8px; align-items: center; position: relative; padding: 2px 0; cursor: default; }
+  .row.click { cursor: pointer; }
+  .row.click:hover { background: var(--card); }
+  .row.sel { outline: 1px solid var(--accent); border-radius: 4px; }
+  .row .bar { position: absolute; inset: 1px auto 1px 0; background: color-mix(in srgb, var(--accent) 22%, transparent); border-radius: 4px; }
+  .row span { position: relative; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 6px; }
+  .row b { position: relative; font-weight: 500; font-variant-numeric: tabular-nums; padding-right: 6px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--mute); font-weight: 600; font-size: 11px; }
+  td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tr.click { cursor: pointer; } tr.click:hover td { background: var(--card); }
+  .conv { cursor: pointer; display: grid; gap: 6px; } .conv:hover { border-color: var(--accent); }
+  .conv .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .meta { color: var(--mute); font-size: 11px; display: flex; flex-wrap: wrap; gap: 3px 12px; align-items: center; }
+  .chip { display: inline-flex; gap: 4px; align-items: center; padding: 0 7px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 11px; white-space: nowrap; }
+  .chip.k-compact, .chip.fail, .chip.k-error { color: var(--bad); border-color: var(--bad); }
+  .chip.ok, .chip.k-skill { color: var(--good); } .chip.bg, .chip.k-inject { color: var(--accent); } .chip.k-user { color: var(--c-answer); }
+  .warn { color: var(--bad); } .pos { color: var(--bad); } .neg { color: var(--good); }
+  svg text { fill: var(--mute); font-size: 10px; }
+  .empty { color: var(--mute); text-align: center; padding: 26px; }
+  .sub { color: var(--mute); font-weight: 400; text-transform: none; letter-spacing: 0; }
+  .tip { position: fixed; pointer-events: none; z-index: 10; background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+    padding: 4px 8px; font-size: 11px; box-shadow: 0 4px 14px rgba(0,0,0,.18); display: none; white-space: nowrap; }
+  .scroll { overflow-x: auto; }
+  .pin { border-color: var(--accent); }
+  .pin dl { display: grid; grid-template-columns: 70px 1fr; gap: 3px 10px; margin: 6px 0 0; }
+  .pin dt { color: var(--mute); } .pin dd { margin: 0; overflow-wrap: anywhere; }
+  pre { margin: 4px 0; padding: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 6px; max-height: 320px; overflow: auto;
+    white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.4 ui-monospace, monospace; }
+  details { border-bottom: 1px solid var(--line); padding: 3px 0; }
+  summary { cursor: pointer; display: flex; gap: 8px; align-items: center; }
+  summary b { margin-left: auto; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .item { display: grid; grid-template-columns: 44px minmax(0,1fr) 54px; gap: 6px; padding: 2px 0 2px 16px; cursor: pointer; }
+  .item:hover { background: var(--card); } .item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .mono { font-family: ui-monospace, monospace; font-size: 11.5px; }
+  .field { display: grid; grid-template-columns: 170px minmax(0,1fr); gap: 6px 12px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line); }
+  .field small { color: var(--mute); display: block; }
+  .node { position: relative; }
+  .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--good); display: inline-block; animation: pulse 1.4s infinite; }
+  @keyframes pulse { 50% { opacity: .25; } }
+  @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
+  .toast { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 6px 14px; border-radius: 999px; z-index: 20; display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Context Insights</h1>
+  <div class="tabs" id="tabs"></div>
+  <span class="grow"></span>
+  <span id="askbar"></span>
+  <button class="ghost" id="refresh" title="Refresh">↻</button>
+</header>
+<main id="app"><div class="empty">…</div></main>
+<div class="tip" id="tip"></div><div class="toast" id="toast"></div>
+
+<script>
+const zh = /^zh/i.test(navigator.language);
+const I = {
+  insights: ['Insights', '洞察'], context: ['Context', '上下文'], fleet: ['Fleet', '编队'], settings: ['Settings', '设置'],
+  vOverview: ['Overview', '概览'], vBrowser: ['Browser', '浏览器'], vEvents: ['Events', '事件'], vFiles: ['Files', '文件'], vCommands: ['Commands', '命令'],
+  side: ['Side question', '旁路提问'], copyBtw: ['Copy /btw', '复制 /btw'], 
+  sideTip: ['Start an isolated side conversation with the report (main chat untouched)', '用报告开一个独立的旁路对话(不影响当前对话)'],
+  btwTip: ['Copy a /btw command to paste into the composer', '复制 /btw 命令,粘贴到输入框即用原生 /btw'],
+  sideOk: ['Side conversation started', '已开启旁路对话'], btwOk: ['Copied — paste after /btw in the composer', '已复制,粘贴到输入框(以 /btw 开头)'],
+  back: ['← All', '← 返回'], d7: ['7 days', '近 7 天'], d30: ['30 days', '近 30 天'], d90: ['90 days', '近 90 天'], all: ['All time', '全部'],
+  ctxNow: ['Context now', '当前上下文'], peak: ['Peak', '峰值'], req: ['Requests', '模型请求'], steps: ['Steps', '步骤'],
+  turns: ['Turns', '轮次'], cache: ['Cache hit', '缓存命中'], fresh: ['Fresh input', '新输入'], out: ['Output', '输出'],
+  cacheRead: ['Cache read', '缓存读取'], tools: ['Tool calls', '工具调用'], convs: ['Conversations', '会话数'],
+  ckpt: ['Truncations', '上下文截断'], errors: ['Errors', '错误'], cost: ['Est. cost', '估算成本'], costTip: ['from rates in Settings', '按设置中的单价'],
+  statsCtx: ['Context Stats', '上下文统计'], statsTok: ['Token Stats', 'Token 统计'], statsTime: ['Timing Stats', '耗时统计'],
+  activeTime: ['Active time', '活跃时长'], modelTime: ['Model', '模型'], toolTime: ['Tools', '工具'],
+  nowCtx: ['Current context', '当前上下文'], nowNote: ['calibrated to the real request size', '已按真实请求大小校准'],
+  free: ['Free', '剩余'], base: ['System prompt, tools & rules', '系统提示词、工具与规则'], ofWindow: ['of window', '占窗口'],
+  comp: ['Content composition', '内容组成'], compNote: ['estimated tokens', '估算 token'],
+  trend: ['Context trend', '上下文趋势'], gStep: ['Step', '步骤'], gTurn: ['Turn', '轮次'], mTotal: ['Total', '累计'], mDelta: ['Delta', '增量'],
+  ovw: ['Fit to width', '适应宽度'], trendNote: ['✂ = checkpoint · click a bar to pin', '✂ = 检查点 · 点击柱子固定'],
+  pinned: ['Pinned request', '已固定的请求'], actual: ['Actual', '实际'], prompt: ['prompt', '提示'], user_: ['User', '用户'], inn: ['In', '输入'], resp: ['Response', '回复'],
+  browse: ['Browse this request →', '浏览该请求 →'],
+  toolsT: ['Tools', '工具'], cmds: ['Programs', '程序'], skills: ['Skills loaded', '加载的技能'], filesT: ['File activity', '文件活动'],
+  turnsT: ['Turns', '各轮次'], heavy: ['Heaviest first', '增长最多优先'], chrono: ['Chronological', '按时间'],
+  start: ['Start', '起始'], growth: ['Growth', '增长'], reqs: ['Req', '请求'], tl: ['Tools', '工具'],
+  last7: ['Last 7 days', '最近 7 天'], heat: ['Activity (requests/day, 8 weeks)', '活跃度(请求/天,近 8 周)'],
+  convList: ['Conversations', '会话'], sortRecent: ['Recent', '最近'], sortPeak: ['Peak', '峰值'], sortTok: ['Tokens', 'Token'],
+  search: ['Search…', '搜索…'], group: ['Group by project', '按项目分组'], clear: ['Clear filters', '清除筛选'],
+  none: ['No data', '暂无数据'], notok: ['No token data (older log)', '无 token 数据(较早日志)'],
+  mReq: ['Requests', '请求数'], mFresh: ['Fresh tokens', '新 token'], mCache: ['Cache read', '缓存读取'],
+  brReq: ['Request', '请求'], brNote: ['items the model saw since the last checkpoint · click to read', '该请求可见内容(自上次检查点起)· 点击查看原文'],
+  evTitle: ['Context events', '上下文事件'], evAll: ['All', '全部'], evCompact: ['Compact', '压缩'], evInject: ['Inject', '注入'],
+  evSkill: ['Skill', '技能'], evError: ['Error', '错误'], evUser: ['User', '用户'], dTok: ['Δ tokens', 'Δ token'], when: ['When', '时间'],
+  fRead: ['Read', '读取'], fWrite: ['Written', '写入'], fSearch: ['Searched', '搜索'], fImg: ['Images', '图片'], fPath: ['Filter path…', '筛选路径…'],
+  lines: ['Lines', '行数'], hits: ['hits', '命中'],
+  cmdRuns: ['Runs', '执行'], cmdFail: ['Failed', '失败'], cmdBg: ['Background', '后台'], cmdTime: ['Total time', '总耗时'], cmdSlow: ['Slowest', '最慢'],
+  cmdFilter: ['Filter commands…', '筛选命令…'], ok: ['ok', '成功'], fail: ['fail', '失败'], bg: ['bg', '后台'],
+  agents: ['Agents', 'Agent 数'], running: ['Running', '运行中'], main: ['main', '主控'], sub: ['subagent', '子 Agent'], idle: ['idle', '空闲'],
+  openChat: ['Open chat', '打开对话'], openCtx: ['Context', '上下文'], noFleet: ['No subagents in this conversation', '该会话没有子 Agent'],
+  sDefaults: ['Defaults', '默认值'], sRange: ['Insights range', '洞察时间范围'], sWindow: ['Context window (tokens)', '上下文窗口(token)'],
+  sRates: ['Rates (USD per 1M tokens)', '单价(美元 / 百万 token)'], sRatesN: ['Set to enable cost estimates; 0 = hidden', '设置后显示成本估算;0 = 隐藏'],
+  sTrend: ['Trend defaults', '趋势默认值'], sSort: ['Conversation sort', '会话排序'],
+  sCustom: ['Custom instructions', '自定义指令'], sCustomN: ['Saved to this plugin’s always-on rule (rules/AGENTS.md) and applied to every conversation. Clear to remove. May need a restart to take effect.', '保存为本插件的常驻规则(rules/AGENTS.md),对所有会话生效;清空即移除。可能需要重启才生效。'],
+  save: ['Save', '保存'], saved: ['Saved', '已保存'],
+  user: ['User messages', '用户消息'], system: ['System / checkpoints', '系统 / 检查点'], reasoning: ['Reasoning', '推理'],
+  answer: ['Answers', '回答'], toolCalls: ['Tool call args', '工具调用参数'], commands: ['Command output', '命令输出'],
+  files: ['File reads', '文件读取'], edits: ['Edit results', '编辑结果'], search_: ['Search & web', '搜索与网页'],
+  mcp: ['MCP tools', 'MCP 工具'], other: ['Other results', '其他结果'],
+};
+const t = (k) => (I[k] || [k, k])[zh ? 1 : 0];
+const SRV = ['user', 'system', 'reasoning', 'answer', 'toolCalls', 'commands', 'files', 'edits', 'search', 'mcp', 'other'];
+const ORDER = ['base', 'system', 'user', 'reasoning', 'answer', 'toolCalls', 'commands', 'files', 'edits', 'search', 'mcp', 'other'];
+const COMP = ['commands', 'files', 'toolCalls', 'reasoning', 'search', 'edits', 'system', 'answer', 'user', 'mcp', 'other'];
+const cLabel = (k) => (k === 'search' ? t('search_') : k === 'base' ? t('base') : t(k));
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const K = (n) => { const a = Math.abs(n); return (n < 0 ? '−' : '') + (a >= 1e9 ? (a / 1e9).toFixed(2) + 'B' : a >= 1e6 ? (a / 1e6).toFixed(2) + 'M' : a >= 1e3 ? (a / 1e3).toFixed(1) + 'k' : String(Math.round(a))); };
+const P = (x) => (x * 100).toFixed(1) + '%';
+const D = (ms) => ms >= 3600e3 ? (ms / 3600e3).toFixed(1) + 'h' : ms >= 60e3 ? (ms / 60e3).toFixed(1) + 'm' : (ms / 1e3).toFixed(1) + 's';
+const money = (x) => '$' + (x >= 100 ? x.toFixed(0) : x.toFixed(2));
+const when = (ts) => ts ? new Date(ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+const short = (p) => { const parts = String(p).split('/'); return parts.length > 3 ? '…/' + parts.slice(-3).join('/') : p; };
+
+const S = {
+  tab: 'context', view: 'overview', convId: null, st: null, d: null, o: null, fl: null,
+  gran: 'step', mode: 'total', ovw: false, pin: null, browseK: null, turnOrder: 'heavy', metric: 'mFresh',
+  f: { tool: null, cmd: null, skill: null, day: null, q: '' }, sort: 'recent', group: false,
+  ev: 'all', fileF: 'all', fileQ: '', openFile: null, cmdF: 'all', cmdQ: '', cmdProg: null, openCmd: null, stepView: {},
+  browse: null,
+};
+let timer = null;
+const api = async (path, body) => {
+  const r = await window.sidecar.fetch(path, { method: 'POST', body: JSON.stringify(body || {}) });
+  if (!r.ok) throw new Error(await r.text());
+  return r.json();
+};
+const curId = () => S.convId || window.sidecar.conversationId || undefined;
+function toast(msg) { const e = $('#toast'); e.textContent = msg; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => { e.style.display = 'none'; }, 2600); }
+
+// ------------------------------------------------------------ shared components
+const kpi = (l, v, s = '', cls = '', tip = '') => `<div class="card kpi" ${tip ? `title="${esc(tip)}"` : ''}><div class="l">${l}</div><div class="v ${cls}">${v}</div><div class="s">${s}</div></div>`;
+const tot = (c, keys = COMP) => keys.reduce((a, k) => a + (c[k] || 0), 0) || 1;
+function stackBar(comp, h) {
+  const total = tot(comp);
+  return `<div class="stack" ${h ? `style="height:${h}px"` : ''}>${COMP.filter((k) => comp[k]).map((k) =>
+    `<i style="width:${(comp[k] / total) * 100}%;background:var(--c-${k})" title="${cLabel(k)} ${K(comp[k])} (${P(comp[k] / total)})"></i>`).join('')}</div>`;
+}
+function legend(comp, keys = COMP) {
+  const total = tot(comp, keys);
+  return '<div class="legend">' + keys.filter((k) => comp[k] > 0).sort((a, b) => comp[b] - comp[a]).map((k) =>
+    `<div><span class="dot" style="background:var(--c-${k})"></span><em>${cLabel(k)}</em><b>${K(comp[k])} · ${P(comp[k] / total)}</b></div>`).join('') + '</div>';
+}
+function bars(list, { fmt = (x) => x, act = '', sel = null } = {}) {
+  if (!list.length) return `<div class="empty">${t('none')}</div>`;
+  const max = Math.max(...list.map((x) => x.count)) || 1;
+  return list.map((x) => `<div class="row ${act ? 'click' : ''} ${sel === x.name ? 'sel' : ''}" ${act ? `data-act="${act}" data-v="${esc(x.name)}"` : ''} title="${esc(x.name)}">
+    <i class="bar" style="width:${(x.count / max) * 100}%"></i><span>${esc(fmt(x.name))}</span><b>${x.count}</b></div>`).join('');
+}
+const seg = (items, cur, act) => `<span class="seg">${items.map(([v, l]) => `<button class="${cur === v ? 'on' : ''}" data-act="${act}" data-v="${v}">${l}</button>`).join('')}</span>`;
+
+// ------------------------------------------------------------ INSIGHTS
+function dayChart(days) {
+  const val = (d) => S.metric === 'mReq' ? d.r : S.metric === 'mCache' ? d.c : d.i + d.o;
+  const max = Math.max(...days.map(val), 1);
+  const W = 360, H = 130, B = 18, bw = W / days.length;
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%">${days.map((d, i) => {
+    const h = (val(d) / max) * (H - B - 14);
+    return `<rect x="${i * bw + 6}" y="${H - B - h}" width="${bw - 12}" height="${Math.max(h, 1)}" rx="3" fill="var(--accent)" opacity="${val(d) ? .85 : .2}" data-act="fday" data-v="${d.day}" style="cursor:pointer"><title>${d.day}: ${K(val(d))}</title></rect>
+      <text x="${i * bw + bw / 2}" y="${H - 5}" text-anchor="middle">${d.day.slice(5)}</text>
+      ${val(d) ? `<text x="${i * bw + bw / 2}" y="${H - B - h - 3}" text-anchor="middle">${K(val(d))}</text>` : ''}`;
+  }).join('')}</svg>`;
+}
+function heatmap(days) {
+  const max = Math.max(...days.map((d) => d.r), 1);
+  const first = new Date(days[0].day + 'T00:00:00').getDay();
+  const cells = days.map((d, i) => {
+    const idx = i + first, col = Math.floor(idx / 7), row = idx % 7;
+    return `<rect x="${col * 14}" y="${row * 14}" width="11" height="11" rx="2" fill="var(--accent)" stroke="${S.f.day === d.day ? 'var(--fg)' : 'none'}" opacity="${d.r ? .15 + .85 * (d.r / max) : .07}" data-act="fday" data-v="${d.day}" style="cursor:pointer"><title>${d.day}: ${d.r}</title></rect>`;
+  }).join('');
+  return `<svg viewBox="0 0 ${Math.ceil((days.length + first) / 7) * 14} 98" width="100%" style="max-height:130px">${cells}</svg>`;
+}
+function convCard(c) {
+  return `<div class="card conv" data-act="openconv" data-v="${c.id}">
+    <div class="t" title="${esc(c.title)}">${esc(c.title || c.id)}</div>${stackBar(c.comp, 8)}
+    <div class="meta"><span>${when(c.last)}</span><span>${c.turns} ${t('turns').toLowerCase()}</span>
+      ${c.hasTokens ? `<span>${t('peak')} ${K(c.peak)}</span><span>${t('cache')} ${P(c.tokens.cache / ((c.tokens.cache + c.tokens.input) || 1))}</span>` : `<span>${t('notok')}</span>`}
+      ${c.cost ? `<span>${money(c.cost)}</span>` : ''}${c.children ? `<span class="chip">⛓ ${c.children}</span>` : ''}
+      ${c.project && !S.group ? `<span class="chip">${esc(c.project)}</span>` : ''}${c.checkpoints ? `<span class="chip warn">✂ ${c.checkpoints}</span>` : ''}</div></div>`;
+}
+function viewInsights(o) {
+  const T = o.totals;
+  const F = S.f;
+  let list = [...o.conversations];
+  if (F.tool) list = list.filter((c) => c.toolNames.includes(F.tool));
+  if (F.cmd) list = list.filter((c) => c.cmdNames.includes(F.cmd));
+  if (F.skill) list = list.filter((c) => c.skillNames.includes(F.skill));
+  if (F.day) list = list.filter((c) => c.activeDays.includes(F.day));
+  if (F.q) { const q = F.q.toLowerCase(); list = list.filter((c) => (c.title + ' ' + c.project + ' ' + c.id).toLowerCase().includes(q)); }
+  if (S.sort === 'peak') list.sort((a, b) => b.peak - a.peak);
+  if (S.sort === 'tok') list.sort((a, b) => (b.tokens.input + b.tokens.output) - (a.tokens.input + a.tokens.output));
+  const active = Object.entries(F).filter(([k, v]) => v && k !== 'q');
+  const act = o.timing.model + o.timing.tool;
+  const mb = (m) => `<button class="${S.metric === m ? 'on' : ''}" data-act="metric" data-v="${m}">${t(m)}</button>`;
+  let convHtml;
+  if (S.group) {
+    const groups = {};
+    list.forEach((c) => (groups[c.project || '—'] ||= []).push(c));
+    convHtml = Object.entries(groups).sort((a, b) => b[1][0].last - a[1][0].last).map(([p, cs]) =>
+      `<h2 class="mute" style="margin:10px 2px 6px;font-size:12px">${esc(p)} <span class="sub">· ${cs.length}</span></h2><div class="cols" style="grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr))">${cs.map(convCard).join('')}</div>`).join('');
+  } else convHtml = `<div class="cols" style="grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr))">${list.map(convCard).join('')}</div>`;
+  return `<div class="kpis">
+    ${kpi(t('convs'), T.convs, `${T.turns} ${t('turns').toLowerCase()}`)}
+    ${kpi(t('req'), K(T.requests), `${K(T.toolCalls)} ${t('tools').toLowerCase()}`)}
+    ${kpi(t('fresh'), K(T.input), `${t('out')} ${K(T.output)}`)}
+    ${kpi(t('cacheRead'), K(T.cache), `${t('cache')} ${P(o.cacheHit)}`)}
+    ${act ? kpi(t('activeTime'), D(act), `${t('modelTime')} ${P(o.timing.model / act)}`) : ''}
+    ${o.cost ? kpi(t('cost'), money(o.cost), t('costTip')) : ''}</div>
+  <div class="cols">
+    <div class="card"><h2>${t('last7')}${seg([['mFresh', t('mFresh')], ['mCache', t('mCache')], ['mReq', t('mReq')]], S.metric, 'metric')}</h2>${dayChart(o.last7)}</div>
+    <div class="card"><h2>${t('heat')}</h2>${heatmap(o.heat)}</div></div>
+  <div class="card"><h2>${t('comp')}<span class="sub">${t('compNote')}</span></h2>${stackBar(o.comp)}${legend(o.comp)}</div>
+  <div class="cols">
+    <div class="card"><h2>${t('toolsT')}</h2>${bars(o.tools, { act: 'ftool', sel: F.tool })}</div>
+    <div class="card"><h2>${t('cmds')}</h2>${bars(o.cmds, { act: 'fcmd', sel: F.cmd })}</div>
+    <div class="card"><h2>${t('skills')}</h2>${bars(o.skills, { act: 'fskill', sel: F.skill })}</div>
+    <div class="card"><h2>${t('filesT')}</h2>${bars(o.files, { fmt: short })}</div></div>
+  <div class="card" style="border:0;background:none;padding:0"><h2 style="margin:0">${t('convList')} <span class="sub">${list.length}</span>
+    <span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
+      <input id="q" placeholder="${t('search')}" value="${esc(F.q)}" style="width:150px">
+      <button class="${S.group ? 'on' : ''} ghost" data-act="group">${t('group')}</button>
+      ${seg([['recent', t('sortRecent')], ['peak', t('sortPeak')], ['tok', t('sortTok')]], S.sort, 'sort')}
+      ${active.length ? `<button class="ghost" data-act="fclear">✕ ${active.map(([k, v]) => esc(k === 'day' ? v.slice(5) : v)).join(' · ')}</button>` : ''}</span></h2></div>
+  ${convHtml}`;
+}
+
+// ------------------------------------------------------------ CONTEXT: overview
+const baseOf = (d) => { if (d.baseline != null) return d.baseline; const p = d.series[0]; return p ? Math.max(0, p[2] - p[6].reduce((a, b) => a + b, 0)) : 0; };
+function segs(p, B) { // calibrated composition of the request's context
+  const v = p[6], sumv = v.reduce((a, b) => a + b, 0), R = Math.max(0, p[2] - B), sc = sumv ? R / sumv : 0;
+  const o = { base: Math.min(B, p[2]) };
+  SRV.forEach((k, i) => { o[k] = v[i] * sc; });
+  return o;
+}
+function trendPoints(d) {
+  let pts = d.series;
+  if (S.gran === 'turn') {
+    const m = new Map(); pts.forEach((p) => m.set(p[5], p)); pts = [...m.values()].sort((a, b) => a[0] - b[0]);
+  }
+  return pts;
+}
+let trendCtx = null;
+function trendChart(d) {
+  const pts = trendPoints(d);
+  if (pts.length < 2) return `<div class="empty">${t('none')}</div>`;
+  const B = d.baseline ?? baseOf(d);
+  const sg = pts.map((p) => segs(p, B));
+  const delta = S.mode === 'delta';
+  const stacks = sg.map((s, i) => {
+    if (!delta) return { pos: ORDER.map((k) => [k, s[k]]), neg: [] };
+    const prev = i ? sg[i - 1] : {};
+    const pos = [], neg = [];
+    ORDER.forEach((k) => { const dv = s[k] - (prev[k] || 0); (dv >= 0 ? pos : neg).push([k, Math.abs(dv)]); });
+    return { pos, neg };
+  });
+  const sum = (a) => a.reduce((x, y) => x + y[1], 0);
+  const ymax = Math.max(...stacks.map((s) => sum(s.pos))) * 1.06 || 1;
+  const ymin = delta ? Math.max(...stacks.map((s) => sum(s.neg)), 0) * 1.06 : 0;
+  const L = 44, R = 8, T = 8, Bt = 20, H = 210;
+  const W = S.ovw ? 720 : Math.max(720, pts.length * 9 + L + R);
+  const bw = (W - L - R) / pts.length;
+  const y = (v) => T + (1 - (v + ymin) / (ymax + ymin)) * (H - T - Bt);
+  let g = '';
+  for (let i = 0; i <= 4; i++) { const v = -ymin + ((ymax + ymin) / 4) * i; g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 4}" y="${y(v) + 3}" text-anchor="end">${K(v)}</text>`; }
+  let bs = '';
+  stacks.forEach((s, i) => {
+    const x = L + i * bw, w = Math.max(S.ovw ? bw + .3 : bw - 1.5, 1);
+    let acc = 0;
+    s.pos.forEach(([k, v]) => { if (v <= 0) return; bs += `<rect x="${x.toFixed(1)}" y="${y(acc + v).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max((y(acc) - y(acc + v)), .4).toFixed(1)}" fill="var(--c-${k})"/>`; acc += v; });
+    acc = 0;
+    s.neg.forEach(([k, v]) => { if (v <= 0) return; bs += `<rect x="${x.toFixed(1)}" y="${y(-acc).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(y(-acc - v) - y(-acc), .4).toFixed(1)}" fill="var(--c-${k})" opacity=".55"/>`; acc += v; });
+  });
+  const marks = (d.checkpointList || []).map((c) => {
+    const i = pts.findIndex((p) => p[0] > c.k); if (i < 0) return '';
+    const x = L + i * bw;
+    return `<line x1="${x}" x2="${x}" y1="${T}" y2="${H - Bt}" stroke="var(--bad)" stroke-dasharray="3 3"/><text x="${x - 3}" y="${T + 8}" text-anchor="end" style="fill:var(--bad)">✂</text>`;
+  }).join('');
+  const pin = S.pin != null && pts[S.pin] ? `<rect x="${L + S.pin * bw - 1}" y="${T}" width="${bw + 2}" height="${H - T - Bt}" fill="none" stroke="var(--fg)" stroke-width="1.2"/>` : '';
+  const zero = delta ? `<line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--fg)" opacity=".4"/>` : '';
+  trendCtx = { pts, sg, stacks, L, bw, W, B };
+  return `<div class="scroll" ${S.ovw ? '' : 'id="tscroll"'}><svg id="trend" viewBox="0 0 ${W} ${H}" ${S.ovw ? 'width="100%"' : `width="${W}"`} height="${H}" style="display:block">${g}${bs}${zero}${marks}${pin}
+    <text x="${L}" y="${H - 5}">#${pts[0][0]}</text><text x="${W - R}" y="${H - 5}" text-anchor="end">#${pts[pts.length - 1][0]}</text></svg></div>`;
+}
+function wireTrend(prevLeft) {
+  const svg = $('#trend'); if (!svg || !trendCtx) return;
+  const sc = $('#tscroll'); if (sc) sc.scrollLeft = prevLeft != null ? prevLeft : sc.scrollWidth;
+  const tip = $('#tip');
+  const idx = (e) => { const r = svg.getBoundingClientRect(); const fx = ((e.clientX - r.left) / r.width) * trendCtx.W; return Math.min(trendCtx.pts.length - 1, Math.max(0, Math.floor((fx - trendCtx.L) / trendCtx.bw))); };
+  svg.addEventListener('mousemove', (e) => {
+    const i = idx(e), p = trendCtx.pts[i], s = trendCtx.sg[i];
+    const topc = ORDER.filter((k) => s[k] > 0).sort((a, b) => s[b] - s[a]).slice(0, 3).map((k) => `${cLabel(k)} ${K(s[k])}`).join(' · ');
+    tip.style.display = 'block'; tip.style.left = Math.min(e.clientX + 12, innerWidth - 260) + 'px'; tip.style.top = e.clientY + 12 + 'px';
+    tip.innerHTML = `#${p[0]} · ${K(p[2])} ctx · ${t('cacheRead')} ${K(p[2] - p[3])} · ${t('fresh')} ${K(p[3])}<br>${esc(topc)}`;
+  });
+  svg.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
+  svg.addEventListener('click', (e) => { S.pin = idx(e); render(true); });
+}
+function pinnedPanel(d) {
+  if (S.pin == null || !trendCtx || !trendCtx.pts[S.pin]) return '';
+  const i = S.pin, p = trendCtx.pts[i], s = trendCtx.sg[i], prev = i ? trendCtx.sg[i - 1] : {};
+  const turn = d.turnList.find((x) => x.n === p[5]);
+  const inn = ORDER.map((k) => [k, s[k] - (prev[k] || 0)]).filter(([, v]) => v > 50).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  return `<div class="card pin"><h2>${t('pinned')} #${p[0]} <span class="sub">${when(p[1])} · ${t('turns').toLowerCase()} ${p[5]}</span>
+    <button class="ghost" data-act="tobrowse" data-v="${p[0]}">${t('browse')}</button></h2>
+    <dl><dt>${t('actual')}</dt><dd>${t('prompt')} ${K(p[2])} (${t('fresh').toLowerCase()} ${K(p[3])} + ${t('cacheRead').toLowerCase()} ${K(p[2] - p[3])}) · ${t('out').toLowerCase()} ${K(p[4])}</dd>
+    <dt>${t('user_')}</dt><dd>${esc(turn ? turn.text : '—')}</dd>
+    <dt>${t('inn')}</dt><dd>${inn.length ? inn.map(([k, v]) => `<span class="chip"><span class="dot" style="background:var(--c-${k})"></span>${cLabel(k)} ${v > 0 ? '+' : ''}${K(v)}</span>`).join(' ') : '—'}</dd>
+    <dt>${t('resp')}</dt><dd>${p[7] ? `<span class="mono">${esc(p[7])}</span><br>` : ''}${esc(p[8] || '')}</dd></dl></div>`;
+}
+function nowCard(d) {
+  const W = S.st.contextWindow, B = baseOf(d), now = d.lastCtx;
+  let cn = d.compNow;
+  if (SRV.reduce((a, k) => a + (cn[k] || 0), 0) < 1 && d.series.length) { // log ends right at a checkpoint: use the last request's view
+    const lp = d.series[d.series.length - 1]; cn = Object.fromEntries(SRV.map((k, i) => [k, lp[6][i]]));
+  }
+  const sumv = tot(cn, SRV), R = Math.max(0, now - B), sc = R / sumv;
+  const calib = { base: Math.min(B, now) }; SRV.forEach((k) => { calib[k] = (cn[k] || 0) * sc; });
+  const keys = ORDER;
+  const segsH = keys.filter((k) => calib[k] > 0).map((k) => `<i style="width:${(calib[k] / W) * 100}%;background:var(--c-${k})" title="${cLabel(k)} ${K(calib[k])}"></i>`).join('')
+    + `<i class="free" style="flex:1" title="${t('free')} ${K(Math.max(0, W - now))}"></i>`;
+  return `<div class="card"><h2>${t('nowCtx')}<span class="sub">${K(now)} / ${K(W)} · ${P(now / W)} ${t('ofWindow')} · ${t('nowNote')}</span></h2>
+    <div class="stack" style="height:16px">${segsH}</div>${legend(calib, keys)}</div>`;
+}
+function viewOverview(d) {
+  const hasT = d.hasTokens, act = d.timing.model + d.timing.tool;
+  const parts = [];
+  parts.push(`<div class="meta"><b style="color:var(--fg)">${esc(d.title)}</b><span>${when(d.first)} → ${when(d.last)}</span>${d.project ? `<span class="chip">${esc(d.project)}</span>` : ''}${d.children ? `<span class="chip">⛓ ${d.children}</span>` : ''}</div>`);
+  parts.push(`<div class="kpis">
+    ${kpi(t('turns'), d.turns, `${d.steps} ${t('steps').toLowerCase()}`)}
+    ${kpi(t('tools'), d.toolCalls, `${d.errors} ${t('errors').toLowerCase()}`)}
+    ${hasT ? kpi(t('ctxNow'), K(d.lastCtx), `${t('peak')} ${K(d.peak)} · ${P(d.lastCtx / S.st.contextWindow)}`) : ''}
+    ${hasT ? kpi(t('req'), d.requests, `${t('cache')} ${P(d.cacheHit)}`) : ''}
+    ${hasT ? kpi(t('fresh'), K(d.tokens.input), `${t('cacheRead')} ${K(d.tokens.cache)} · ${t('out')} ${K(d.tokens.output)}`) : ''}
+    ${act ? kpi(t('activeTime'), D(act), `${t('modelTime')} ${D(d.timing.model)} · ${t('toolTime')} ${D(d.timing.tool)}`) : ''}
+    ${kpi(t('ckpt'), d.checkpoints, '', d.checkpoints ? 'warn' : '')}
+    ${d.cost ? kpi(t('cost'), money(d.cost), t('costTip')) : ''}</div>`);
+  if (hasT) {
+    parts.push(nowCard(d));
+    parts.push(`<div class="card"><h2>${t('trend')}<span style="display:flex;gap:6px;flex-wrap:wrap">
+      ${seg([['step', t('gStep')], ['turn', t('gTurn')]], S.gran, 'gran')}${seg([['total', t('mTotal')], ['delta', t('mDelta')]], S.mode, 'mode')}
+      <button class="ghost ${S.ovw ? 'on' : ''}" data-act="ovw">${t('ovw')}</button></span></h2>
+      ${trendChart(d)}<div class="mute" style="margin-top:4px">${t('trendNote')}</div></div>`);
+    parts.push(pinnedPanel(d));
+  } else parts.push(`<div class="card empty">${t('notok')}</div>`);
+  parts.push(`<div class="card"><h2>${t('comp')}<span class="sub">${t('compNote')}</span></h2>${stackBar(d.comp)}${legend(d.comp)}</div>`);
+  parts.push(`<div class="cols"><div class="card"><h2>${t('toolsT')}</h2>${bars(d.tools.slice(0, 10))}</div>
+    <div class="card"><h2>${t('skills')}</h2>${bars(d.skills)}</div></div>`);
+  if (d.turnList.length && hasT) {
+    const rows = d.turnList.filter((x) => x.req);
+    if (S.turnOrder === 'heavy') rows.sort((a, b) => (b.peak - b.start) - (a.peak - a.start));
+    parts.push(`<div class="card"><h2>${t('turnsT')}${seg([['heavy', t('heavy')], ['chrono', t('chrono')]], S.turnOrder, 'torder')}</h2><div class="scroll">
+      <table><tr><th class="n">#</th><th></th><th class="n">${t('start')}</th><th class="n">${t('peak')}</th><th class="n">${t('growth')}</th><th class="n">${t('reqs')}</th><th class="n">${t('tl')}</th></tr>
+      ${rows.slice(0, 25).map((x) => `<tr><td class="n">${x.n}</td><td>${esc(x.text)}</td><td class="n">${K(x.start)}</td><td class="n">${K(x.peak)}</td>
+        <td class="n">${x.peak - x.start >= 0 ? '+' : ''}${K(x.peak - x.start)}</td><td class="n">${x.req}</td><td class="n">${x.tools}</td></tr>`).join('')}</table></div></div>`);
+  }
+  return parts.join('');
+}
+
+// ------------------------------------------------------------ CONTEXT: browser
+function viewBrowser(d) {
+  const ks = d.series.map((p) => p[0]);
+  if (!ks.length) return `<div class="card empty">${t('notok')}</div>`;
+  const k = S.browseK ?? ks[ks.length - 1];
+  const B = d.baseline ?? baseOf(d);
+  let body = `<div class="empty">…</div>`;
+  if (S.browse && S.browse.k === k) {
+    const items = S.browse.items, by = {};
+    items.forEach((it) => (by[it.cat] ||= []).push(it));
+    const cats = ORDER.filter((c) => by[c]).map((c) => [c, by[c].reduce((a, b) => a + b.tok, 0)]).sort((a, b) => b[1] - a[1]);
+    const total = cats.reduce((a, b) => a + b[1], 0) || 1;
+    body = `<div class="row"><span><span class="dot" style="background:var(--c-base)"></span> ${t('base')}</span><b>≈ ${K(B)}</b></div>` + cats.map(([c, sum]) => {
+      const list = by[c].sort((a, b) => b.tok - a.tok);
+      return `<details ${S.openCat === c ? 'open' : ''} data-cat="${c}"><summary><span class="dot" style="background:var(--c-${c})"></span>${cLabel(c)} <span class="mute">${list.length}</span><b>${K(sum)} · ${P(sum / total)}</b></summary>
+        ${list.slice(0, 120).map((it) => `<div class="item" data-act="step" data-v="${it.step}"><span class="mute">#${it.step}</span><span title="${esc(it.title)}">${esc(it.title)}</span><b style="text-align:right;font-weight:500">${K(it.tok)}</b></div>${S.stepView[it.step] ? `<pre>${esc(stepText(S.stepView[it.step]))}</pre>` : ''}`).join('')}
+        ${list.length > 120 ? `<div class="mute" style="padding-left:16px">… ${list.length - 120}</div>` : ''}</details>`;
+    }).join('');
+  }
+  const idx = ks.indexOf(k);
+  return `<div class="card"><h2>${t('brReq')} #${k}<span style="display:flex;gap:6px;align-items:center">
+    <button class="ghost" data-act="bprev" ${idx <= 0 ? 'disabled' : ''}>‹</button>
+    <select id="bsel">${ks.filter((_, i) => i % Math.max(1, Math.ceil(ks.length / 300)) === 0 || ks[i] === k).map((x) => `<option ${x === k ? 'selected' : ''} value="${x}">#${x}</option>`).join('')}</select>
+    <button class="ghost" data-act="bnext" ${idx >= ks.length - 1 ? 'disabled' : ''}>›</button></span></h2>
+    <div class="mute" style="margin-bottom:6px">${t('brNote')}</div>${body}</div>`;
+}
+const stepText = (s) => [s.thinking && `[reasoning]\n${s.thinking}`, s.content, s.tool_calls && `[tool_calls]\n${s.tool_calls}`].filter(Boolean).join('\n\n') || '(empty)';
+async function loadBrowse(d) {
+  const ks = d.series.map((p) => p[0]); if (!ks.length) return;
+  const k = S.browseK ?? ks[ks.length - 1];
+  if (S.browse && S.browse.k === k && S.browse.id === d.id) return;
+  const r = await api('/api/browse', { id: d.id, k });
+  S.browse = { id: d.id, k, items: r.items || [] };
+}
+
+// ------------------------------------------------------------ CONTEXT: events / files / commands
+function viewEvents(d) {
+  const ev = d.events, cnt = (k) => ev.filter((e) => e.kind === k).length;
+  const chips = [['all', t('evAll'), ev.length], ['compact', t('evCompact'), cnt('compact')], ['inject', t('evInject'), cnt('inject')], ['skill', t('evSkill'), cnt('skill')], ['error', t('evError'), cnt('error')], ['user', t('evUser'), cnt('user')]];
+  const rows = ev.filter((e) => S.ev === 'all' || e.kind === S.ev).slice().reverse().slice(0, 300);
+  return `<div class="card"><h2>${t('evTitle')}<span class="seg">${chips.map(([v, l, n]) => `<button class="${S.ev === v ? 'on' : ''}" data-act="evf" data-v="${v}">${l} ${n}</button>`).join('')}</span></h2>
+    ${rows.length ? `<div class="scroll"><table><tr><th>${t('when')}</th><th></th><th></th><th class="n">${t('dTok')}</th><th class="n">#</th></tr>${rows.map((e) => `
+      <tr class="${e.k && d.hasTokens ? 'click' : ''}" ${e.k && d.hasTokens ? `data-act="tobrowse" data-v="${e.k}"` : ''}><td>${when(e.ts)}</td><td><span class="chip k-${e.kind}">${e.kind}</span></td><td>${esc(e.label)}</td>
+      <td class="n ${e.kind === 'compact' ? (e.tok < 0 ? 'neg' : 'pos') : ''}">${e.tok ? (e.kind === 'compact' ? (e.tok > 0 ? '+' : '') + K(e.tok) : '≈' + K(e.tok)) : ''}</td><td class="n">${e.k || ''}</td></tr>`).join('')}</table></div>` : `<div class="empty">${t('none')}</div>`}</div>`;
+}
+const fTotal = (f) => f.r + f.w + f.s + f.img;
+function viewFiles(d) {
+  const q = S.fileQ.toLowerCase();
+  const m = { r: 'r', w: 'w', s: 's', i: 'img' };
+  let rows = d.files.filter((f) => (S.fileF === 'all' || f[m[S.fileF]] > 0) && (!q || f.name.toLowerCase().includes(q)));
+  const count = (k) => d.files.filter((f) => f[m[k]] > 0).length;
+  const add = d.files.reduce((a, f) => a + f.add, 0), del = d.files.reduce((a, f) => a + f.del, 0);
+  const chips = [['all', t('evAll'), d.files.length], ['r', t('fRead'), count('r')], ['w', t('fWrite'), count('w')], ['s', t('fSearch'), count('s')], ['i', t('fImg'), count('i')]];
+  return `<div class="card"><h2>${t('filesT')} <span class="sub">${d.files.length} · <span class="neg">+${add}</span> / <span class="pos">−${del}</span> ${t('lines').toLowerCase()}</span>
+    <span style="display:flex;gap:6px;flex-wrap:wrap"><input id="fq" placeholder="${t('fPath')}" value="${esc(S.fileQ)}" style="width:150px">
+    <span class="seg">${chips.map(([v, l, n]) => `<button class="${S.fileF === v ? 'on' : ''}" data-act="ff" data-v="${v}">${l} ${n}</button>`).join('')}</span></span></h2>
+    ${rows.length ? rows.slice(0, 150).map((f) => `<div class="row click ${S.openFile === f.name ? 'sel' : ''}" data-act="ofile" data-v="${esc(f.name)}" title="${esc(f.name)}"><span class="mono">${esc(short(f.name))}</span>
+      <b>${f.r ? `${t('fRead')[0]}${f.r} ` : ''}${f.w ? `W${f.w} ` : ''}${f.s ? `S${f.s}${f.hits ? `·${f.hits}` : ''} ` : ''}${f.img ? `I${f.img} ` : ''}${f.add || f.del ? `<span class="neg">+${f.add}</span>/<span class="pos">−${f.del}</span>` : ''}</b></div>
+      ${S.openFile === f.name ? `<div style="padding:2px 0 6px 12px">${f.ops.map((o) => `<div class="item" style="grid-template-columns:70px 90px 1fr" data-act="step" data-v="${o[1]}"><span class="mute">#${o[0]}</span><span>${{ r: t('fRead'), w: t('fWrite'), s: t('fSearch'), i: t('fImg') }[o[2]]}</span><span>${o[2] === 'w' ? `+${o[3]}/−${o[4]}` : o[2] === 's' ? `${o[3]} ${t('hits')}` : ''}</span></div>${S.stepView[o[1]] ? `<pre>${esc(stepText(S.stepView[o[1]]))}</pre>` : ''}`).join('')}</div>` : ''}`).join('') : `<div class="empty">${t('none')}</div>`}</div>`;
+}
+function viewCommands(d) {
+  const L = d.cmdList;
+  const fail = L.filter((c) => c.st === 'fail').length, bg = L.filter((c) => c.st === 'bg').length, time = L.reduce((a, c) => a + c.dur, 0);
+  const q = S.cmdQ.toLowerCase();
+  const rows = L.filter((c) => (S.cmdF === 'all' || c.st === S.cmdF) && (!S.cmdProg || c.prog.split(' ').includes(S.cmdProg)) && (!q || c.cmd.toLowerCase().includes(q))).slice().reverse();
+  const slow = [...L].sort((a, b) => b.dur - a.dur).slice(0, 3);
+  return `<div class="kpis">${kpi(t('cmdRuns'), L.length)}${kpi(t('cmdFail'), fail, '', fail ? 'warn' : '')}${kpi(t('cmdBg'), bg)}${kpi(t('cmdTime'), D(time), slow[0] ? `${t('cmdSlow')} ${D(slow[0].dur)}` : '')}</div>
+  <div class="cols"><div class="card"><h2>${t('cmds')}</h2>${bars(d.cmds, { act: 'cprog', sel: S.cmdProg })}</div>
+  <div class="card"><h2>${t('vCommands')}<span class="seg">${['all', 'ok', 'fail', 'bg'].map((v) => `<button class="${S.cmdF === v ? 'on' : ''}" data-act="cf" data-v="${v}">${v === 'all' ? t('evAll') : t(v)}</button>`).join('')}</span></h2>
+    <input id="cq" placeholder="${t('cmdFilter')}" value="${esc(S.cmdQ)}" style="width:100%;margin-bottom:6px">
+    ${rows.slice(0, 120).map((c) => `<div class="item" style="grid-template-columns:44px 52px minmax(0,1fr)" data-act="step" data-v="${c.step}" title="${esc(c.cmd)}"><span class="chip ${c.st}">${t(c.st)}</span><span class="mute">${c.dur ? D(c.dur) : ''}</span><span class="mono">${esc(c.cmd)}</span></div>${S.stepView[c.step] ? `<pre>${esc(stepText(S.stepView[c.step]))}</pre>` : ''}`).join('') || `<div class="empty">${t('none')}</div>`}</div></div>`;
+}
+
+// ------------------------------------------------------------ FLEET + SETTINGS
+function viewFleet(f) {
+  const n = f.nodes;
+  if (n.length < 2) return `<div class="card empty">${t('noFleet')}</div>`;
+  const W = S.st.contextWindow;
+  const sumT = n.reduce((a, c) => ({ i: a.i + c.tokens.input, o: a.o + c.tokens.output }), { i: 0, o: 0 });
+  const cost = n.reduce((a, c) => a + c.cost, 0);
+  return `<div class="kpis">${kpi(t('agents'), n.length)}${kpi(t('running'), n.filter((x) => x.running).length)}${kpi(t('fresh'), K(sumT.i), `${t('out')} ${K(sumT.o)}`)}${cost ? kpi(t('cost'), money(cost)) : ''}</div>` +
+    n.map((c) => `<div class="card node" style="margin-left:${Math.min(c.depth, 4) * 18}px;${c.isCurrent ? 'border-color:var(--accent)' : ''}">
+      <div style="display:flex;gap:8px;align-items:center"><span class="chip">${c.depth ? t('sub') : t('main')}</span>${c.running ? '<span class="pulse" title="running"></span>' : `<span class="mute">${t('idle')}</span>`}
+      <b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${esc(c.title)}">${esc(c.title || c.id)}</b>
+      <button class="ghost" data-act="openconv" data-v="${c.id}">${t('openCtx')}</button><button class="ghost" data-act="openchat" data-v="${c.id}">${t('openChat')}</button></div>
+      <div style="margin:6px 0">${stackBar(c.comp, 8)}</div>
+      <div class="meta"><span>${t('ctxNow')} ${K(c.lastCtx)} (${P(c.lastCtx / W)})</span><span>${t('peak')} ${K(c.peak)}</span><span>${c.requests} ${t('req').toLowerCase()}</span><span>${c.steps} ${t('steps').toLowerCase()}</span>
+      <span>${D(c.activeMs)}</span>${c.cost ? `<span>${money(c.cost)}</span>` : ''}${c.checkpoints ? `<span class="chip warn">✂ ${c.checkpoints}</span>` : ''}</div></div>`).join('');
+}
+function viewSettings() {
+  const s = S.st;
+  const sel = (id, opts, cur) => `<select id="${id}">${opts.map(([v, l]) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
+  const f = (l, ctl, note = '') => `<div class="field"><div>${l}${note ? `<small>${note}</small>` : ''}</div><div>${ctl}</div></div>`;
+  return `<div class="card"><h2>${t('sDefaults')}</h2>
+    ${f(t('sRange'), sel('s_days', [[7, t('d7')], [30, t('d30')], [90, t('d90')], [0, t('all')]], s.days))}
+    ${f(t('sWindow'), `<input type="number" id="s_win" min="1000" step="1000" value="${s.contextWindow}">`)}
+    ${f(t('sRates'), `<input type="number" id="s_ri" min="0" step="0.01" value="${s.rates.input}" title="input"> <input type="number" id="s_rc" min="0" step="0.01" value="${s.rates.cache}" title="cache read"> <input type="number" id="s_ro" min="0" step="0.01" value="${s.rates.output}" title="output">`, t('sRatesN') + ' — ' + `${t('fresh')} / ${t('cacheRead')} / ${t('out')}`)}
+    ${f(t('sSort'), sel('s_sort', [['recent', t('sortRecent')], ['peak', t('sortPeak')], ['tok', t('sortTok')]], s.sort))}
+    ${f(t('group'), `<input type="checkbox" id="s_grp" ${s.groupByProject ? 'checked' : ''}>`)}</div>
+    <div class="card"><h2>${t('sTrend')}</h2>
+    ${f(t('gStep') + ' / ' + t('gTurn'), sel('s_gran', [['step', t('gStep')], ['turn', t('gTurn')]], s.trendGran))}
+    ${f(t('mTotal') + ' / ' + t('mDelta'), sel('s_mode', [['total', t('mTotal')], ['delta', t('mDelta')]], s.trendMode))}
+    ${f(t('ovw'), `<input type="checkbox" id="s_ovw" ${s.trendOverview ? 'checked' : ''}>`)}</div>
+    <div class="card"><h2>${t('sCustom')}</h2><div class="mute" style="margin-bottom:6px">${t('sCustomN')}</div><textarea id="s_ci">${esc(s.customInstructions)}</textarea></div>
+    <div><button class="pri" data-act="saveset">${t('save')}</button></div>`;
+}
+async function saveSettings() {
+  const v = (id) => $(id).value;
+  const next = await api('/api/settings/save', {
+    days: Number(v('#s_days')), contextWindow: Number(v('#s_win')), sort: v('#s_sort'), groupByProject: $('#s_grp').checked,
+    rates: { input: Number(v('#s_ri')), cache: Number(v('#s_rc')), output: Number(v('#s_ro')) },
+    trendGran: v('#s_gran'), trendMode: v('#s_mode'), trendOverview: $('#s_ovw').checked, customInstructions: v('#s_ci'),
+  });
+  S.st = next; applyDefaults(); toast(t('saved')); render(true);
+}
+function applyDefaults() { const s = S.st; S.gran = s.trendGran; S.mode = s.trendMode; S.ovw = s.trendOverview; S.sort = s.sort; S.group = s.groupByProject; }
+
+// ------------------------------------------------------------ controller
+function chrome() {
+  $('#tabs').innerHTML = [['insights', t('insights')], ['context', t('context')], ['fleet', t('fleet')], ['settings', t('settings')]].map(([k, l]) =>
+    `<button class="${S.tab === k ? 'on' : ''}" data-act="tab" data-v="${k}">${l}</button>`).join('');
+  $('#askbar').innerHTML = (S.tab === 'context' || S.tab === 'fleet')
+    ? `<button class="ghost" data-act="side" title="${esc(t('sideTip'))}">${t('side')}</button> <button class="ghost" data-act="btw" title="${esc(t('btwTip'))}">${t('copyBtw')}</button>` : '';
+}
+function ctxNav(d) {
+  return `<div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">${S.convId ? `<button class="ghost" data-act="back">${t('back')}</button>` : ''}
+    <span class="seg">${[['overview', 'vOverview'], ['browser', 'vBrowser'], ['events', 'vEvents'], ['files', 'vFiles'], ['commands', 'vCommands']].map(([v, l]) =>
+      `<button class="${S.view === v ? 'on' : ''}" data-act="view" data-v="${v}">${t(l)}${v === 'events' ? ` ${d.events.length}` : v === 'files' ? ` ${d.files.length}` : v === 'commands' ? ` ${d.cmdList.length}` : ''}</button>`).join('')}</span></div>`;
+}
+
+async function render(soft) {
+  chrome();
+  const app = $('#app');
+  try {
+    if (!S.st) { S.st = await api('/api/settings'); applyDefaults(); }
+    let html = '', after = null;
+    if (S.tab === 'insights') {
+      S.o = await api('/api/overview', {}); html = viewInsights(S.o);
+    } else if (S.tab === 'settings') {
+      html = viewSettings();
+    } else if (S.tab === 'fleet') {
+      S.fl = await api('/api/fleet', { id: curId() });
+      html = S.fl.error ? `<div class="empty">${t('none')}</div>` : viewFleet(S.fl);
+    } else {
+      const d = await api('/api/conversation', { id: curId() });
+      if (d.error) { app.innerHTML = `<div class="empty">${t('none')}</div>`; return; }
+      S.d = d;
+      if (S.view === 'browser') await loadBrowse(d);
+      const body = S.view === 'overview' ? viewOverview(d) : S.view === 'browser' ? viewBrowser(d) : S.view === 'events' ? viewEvents(d) : S.view === 'files' ? viewFiles(d) : viewCommands(d);
+      html = ctxNav(d) + body;
+      after = (pl) => { if (S.view === 'overview' && d.hasTokens) wireTrend(pl); };
+    }
+    const keep = soft ? { x: scrollX, y: scrollY } : null;
+    const prevLeft = soft && $('#tscroll') ? $('#tscroll').scrollLeft : null;
+    app.innerHTML = html;
+    if (after) after(prevLeft);
+    if (keep) scrollTo(keep.x, keep.y); else if (!soft) scrollTo(0, 0);
+  } catch (e) {
+    app.innerHTML = `<div class="empty">${esc(e.message || e)}</div>`;
+  }
+  clearTimeout(timer);
+  timer = setTimeout(() => {
+    const a = document.activeElement;
+    if (S.tab !== 'settings' && !(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) && S.pin == null && !Object.keys(S.stepView).length) render(true); else render.later();
+  }, S.tab === 'insights' ? 60000 : 20000);
+}
+render.later = () => { timer = setTimeout(() => render(true), 20000); };
+
+async function openStep(step) {
+  if (S.stepView[step]) { delete S.stepView[step]; return render(true); }
+  S.stepView[step] = { content: '…' }; render(true);
+  S.stepView[step] = await api('/api/step', { id: S.d.id, step: Number(step) }); render(true);
+}
+async function askSide() {
+  try {
+    const id = S.d?.id || curId();
+    const r = await api('/api/ask-prompt', { id, lang: navigator.language });
+    if (r.error) throw new Error(r.error);
+    const res = await window.sidecar.agent.startConversation(r.prompt, 'Context insight');
+    toast(t('sideOk'));
+    const m = JSON.stringify(res || {}).match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/);
+    if (m && window.sidecar.ui?.toggleConversation) window.sidecar.ui.toggleConversation(m[0]);
+  } catch (e) { toast(String(e.message || e).slice(0, 80)); }
+}
+async function copyBtw() {
+  try {
+    const r = await api('/api/ask-prompt', { id: S.d?.id || curId(), lang: navigator.language });
+    const text = '/btw ' + r.btw;
+    try { await navigator.clipboard.writeText(text); } catch {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    toast(t('btwOk'));
+  } catch (e) { toast(String(e.message || e).slice(0, 80)); }
+}
+
+const ACT = {
+  tab: (v) => { S.tab = v; S.convId = S.tab === 'insights' ? null : S.convId; },
+  view: (v) => { S.view = v; },
+  back: () => { S.convId = null; S.tab = 'insights'; S.pin = null; },
+  openconv: (v) => { S.convId = v; S.tab = 'context'; S.view = 'overview'; S.pin = null; S.browseK = null; S.browse = null; S.stepView = {}; },
+  openchat: (v) => { window.sidecar.ui?.toggleConversation(v); return 'noop'; },
+  gran: (v) => { S.gran = v; S.pin = null; }, mode: (v) => { S.mode = v; }, ovw: () => { S.ovw = !S.ovw; },
+  torder: (v) => { S.turnOrder = v; }, metric: (v) => { S.metric = v; }, sort: (v) => { S.sort = v; }, group: () => { S.group = !S.group; },
+  ftool: (v) => { S.f.tool = S.f.tool === v ? null : v; }, fcmd: (v) => { S.f.cmd = S.f.cmd === v ? null : v; },
+  fskill: (v) => { S.f.skill = S.f.skill === v ? null : v; }, fday: (v) => { S.f.day = S.f.day === v ? null : v; S.tab = 'insights'; },
+  fclear: () => { S.f = { tool: null, cmd: null, skill: null, day: null, q: '' }; },
+  tobrowse: (v) => { S.view = 'browser'; S.browseK = Number(v); S.browse = null; },
+  bprev: () => { const ks = S.d.series.map((p) => p[0]); const i = ks.indexOf(S.browseK ?? ks[ks.length - 1]); S.browseK = ks[Math.max(0, i - 1)]; S.browse = null; },
+  bnext: () => { const ks = S.d.series.map((p) => p[0]); const i = ks.indexOf(S.browseK ?? ks[ks.length - 1]); S.browseK = ks[Math.min(ks.length - 1, i + 1)]; S.browse = null; },
+  evf: (v) => { S.ev = v; }, ff: (v) => { S.fileF = v; }, ofile: (v) => { S.openFile = S.openFile === v ? null : v; },
+  cf: (v) => { S.cmdF = v; }, cprog: (v) => { S.cmdProg = S.cmdProg === v ? null : v; },
+  step: (v) => { openStep(v); return 'noop'; },
+  saveset: () => { saveSettings(); return 'noop'; },
+  side: () => { askSide(); return 'noop'; }, btw: () => { copyBtw(); return 'noop'; },
+};
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-act]'); if (!b) return;
+  const fn = ACT[b.dataset.act]; if (!fn) return;
+  if (fn(b.dataset.v) === 'noop') return;
+  render(['metric', 'sort', 'group', 'ftool', 'fcmd', 'fskill', 'ff', 'ofile', 'evf', 'cf', 'cprog', 'torder', 'mode', 'ovw', 'gran'].includes(b.dataset.act));
+});
+document.addEventListener('input', (e) => {
+  const id = e.target.id;
+  if (!['q', 'fq', 'cq'].includes(id)) return;
+  if (id === 'q') S.f.q = e.target.value; else if (id === 'fq') S.fileQ = e.target.value; else S.cmdQ = e.target.value;
+  const pos = e.target.selectionStart;
+  clearTimeout(input.t); input.t = setTimeout(async () => { await render(true); const el = $('#' + id); if (el) { el.focus(); el.setSelectionRange(pos, pos); } }, 180);
+});
+function input() {}
+document.addEventListener('change', (e) => {
+  if (e.target.id === 'bsel') { S.browseK = Number(e.target.value); S.browse = null; render(true); }
+});
+document.addEventListener('toggle', (e) => { if (e.target.tagName === 'DETAILS') S.openCat = e.target.open ? e.target.dataset.cat : (S.openCat === e.target.dataset.cat ? null : S.openCat); }, true);
+$('#refresh').addEventListener('click', () => render(true));
+render();
+</script>
+</body>
+</html>

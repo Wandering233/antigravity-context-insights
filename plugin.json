@@ -1,0 +1,15 @@
+{
+  "name": "agy-context",
+  "displayName": "Context Insights",
+  "version": "0.2.0",
+  "description": "Context insight for Antigravity, inspired by dsh-context: a side-pane dashboard (insights, context trend and browser, events, file activity, commands, subagent fleet, settings) and a /context skill showing what fills the context window, how it grows per turn, and token, cache and cost usage. Includes an isolated side-question analysis and a /btw helper.",
+  "logo": "assets/logo.svg",
+  "author": "Wandering233",
+  "homepage": "https://github.com/Wandering233/antigravity-context-insights",
+  "repository": "https://github.com/Wandering233/antigravity-context-insights",
+  "suggestedPrompts": [
+    "Analyze the context of this conversation and tell me what is taking the most space",
+    "Which turns grew the context most, and how can I slim it down?",
+    "Show my Antigravity token and cache usage over the last 7 days"
+  ]
+}

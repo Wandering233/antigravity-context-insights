@@ -1,0 +1,13 @@
+# Dependencies & Logs
+node_modules/
+*.log
+
+# System & Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Local cache / user data
+cache.json
+settings.json
