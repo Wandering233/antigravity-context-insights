@@ -13,12 +13,12 @@
     --line: color-mix(in srgb, var(--fg) 13%, transparent);
     --mute: color-mix(in srgb, var(--fg) 58%, transparent);
     --accent: #5b8def; --bad: #e5714f; --good: #4f9d69;
-    --c-base:#6b7280; --c-user:#4f9d69; --c-system:#8c8c8c; --c-reasoning:#a678de; --c-answer:#3fb6c9; --c-toolCalls:#e0a43a;
-    --c-commands:#e5714f; --c-files:#5b8def; --c-edits:#d65d9a; --c-search:#6aa84f; --c-mcp:#b08968; --c-other:#9aa5b1;
+    --c-base:#6b7280; --c-user:#4f9d69; --c-system:#8c8c8c; --c-reasoning:#a678de; --c-answer:#3fb6c9; --c-toolCalls:#e0a43a; --c-toolAll:#e0a43a;
+    --c-commands:#e5714f; --c-files:#5b8def; --c-edits:#d65d9a; --c-search:#6aa84f; --c-mcp:#b08968; --c-other:#9aa5b1; --c-skills:#2dbfa4;
   }
   * { box-sizing: border-box; }
   body { font: 12.5px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
-  header { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+  header { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
     padding: 8px 14px; background: var(--bg); border-bottom: 1px solid var(--line); }
   header h1 { font-size: 14px; margin: 0 6px 0 0; }
   .tabs, .seg { display: inline-flex; gap: 2px; background: var(--card); padding: 2px; border-radius: 8px; flex-wrap: wrap; }
@@ -26,14 +26,15 @@
   button, select, input, textarea { font: inherit; color: inherit; }
   button { background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 3px 10px; cursor: pointer; }
   select, input, textarea { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 3px 8px; }
-  textarea { width: 100%; min-height: 110px; resize: vertical; font-family: ui-monospace, monospace; font-size: 12px; }
-  input[type=number] { width: 110px; }
-  button:hover { background: var(--card); }
+  textarea { width: 100%; min-height: 92px; resize: vertical; font-family: ui-monospace, monospace; font-size: 12px; }
+  input[type=number] { width: 105px; }
+  button:hover:not(:disabled) { background: var(--card); }
+  button:disabled { opacity: .4; cursor: default; }
   button.on { background: var(--bg); border-color: var(--line); font-weight: 600; }
   button.ghost { border-color: var(--line); }
   button.pri { background: var(--accent); color: #fff; border-color: var(--accent); }
   .grow { flex: 1; }
-  main { padding: 14px; display: grid; gap: 12px; max-width: 1100px; margin: 0 auto; }
+  main { padding: 14px; display: grid; gap: 12px; max-width: 1120px; margin: 0 auto; }
   main > *, .cols > *, .kpis > * { min-width: 0; }
   .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; }
@@ -43,10 +44,12 @@
   .kpi .l, .kpi .s, .mute { color: var(--mute); }
   .kpi .s { font-size: 11px; }
   .cols { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(290px, 100%), 1fr)); gap: 12px; }
-  .stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--line); }
+  .stack { display: flex; height: 14px; border-radius: 7px; overflow: hidden; background: var(--line); position: relative; }
   .stack > i { display: block; height: 100%; }
   .stack > i.free { background: repeating-linear-gradient(45deg, transparent 0 4px, var(--line) 4px 5px); }
-  .legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 3px 14px; margin-top: 9px; }
+  .stack > i.past { background: repeating-linear-gradient(45deg, var(--line) 0 4px, transparent 4px 5px); }
+  .mark { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--bad); }
+  .legend { display: grid; grid-template-columns: repeat(auto-fill, minmax(185px, 1fr)); gap: 3px 14px; margin-top: 9px; }
   .legend div { display: flex; align-items: center; gap: 6px; white-space: nowrap; min-width: 0; }
   .legend em { font-style: normal; overflow: hidden; text-overflow: ellipsis; }
   .legend b { margin-left: auto; font-weight: 500; font-variant-numeric: tabular-nums; }
@@ -56,44 +59,80 @@
   .row.click:hover { background: var(--card); }
   .row.sel { outline: 1px solid var(--accent); border-radius: 4px; }
   .row .bar { position: absolute; inset: 1px auto 1px 0; background: color-mix(in srgb, var(--accent) 22%, transparent); border-radius: 4px; }
-  .row span { position: relative; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 6px; }
-  .row b { position: relative; font-weight: 500; font-variant-numeric: tabular-nums; padding-right: 6px; }
+  .row span { position: relative; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-left: 6px; display: flex; align-items: center; gap: 5px; }
+  .row b { position: relative; font-weight: 500; font-variant-numeric: tabular-nums; padding-right: 6px; white-space: nowrap; }
+  .row small { color: var(--mute); font-weight: 400; margin-right: 5px; }
   table { width: 100%; border-collapse: collapse; }
   th, td { text-align: left; padding: 4px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
   th { color: var(--mute); font-weight: 600; font-size: 11px; }
   td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
   tr.click { cursor: pointer; } tr.click:hover td { background: var(--card); }
   .conv { cursor: pointer; display: grid; gap: 6px; } .conv:hover { border-color: var(--accent); }
-  .conv .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .meta { color: var(--mute); font-size: 11px; display: flex; flex-wrap: wrap; gap: 3px 12px; align-items: center; }
+  .conv .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+  .meta { color: var(--mute); font-size: 11px; display: flex; flex-wrap: wrap; gap: 3px 10px; align-items: center; }
   .chip { display: inline-flex; gap: 4px; align-items: center; padding: 0 7px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 11px; white-space: nowrap; }
+  a.chip, .chip.link { cursor: pointer; text-decoration: none; color: inherit; } .chip.link:hover { border-color: var(--accent); }
+  .chip.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 16%, transparent); }
   .chip.k-compact, .chip.fail, .chip.k-error { color: var(--bad); border-color: var(--bad); }
-  .chip.ok, .chip.k-skill { color: var(--good); } .chip.bg, .chip.k-inject { color: var(--accent); } .chip.k-user { color: var(--c-answer); }
+  .chip.ok, .chip.k-skill, .chip.k-in, .chip.k-mode { color: var(--good); }
+  .chip.bg, .chip.k-inject, .chip.k-delegate, .chip.k-model { color: var(--accent); }
+  .chip.k-user, .chip.k-out { color: var(--c-toolCalls); }
+  .glyph { font: 600 9.5px/1 ui-monospace, monospace; padding: 2px 4px; border-radius: 4px; background: var(--card); border: 1px solid var(--line); color: var(--mute); flex: none; }
   .warn { color: var(--bad); } .pos { color: var(--bad); } .neg { color: var(--good); }
+  .diff { font-size: 10.5px; font-weight: 500; }
   svg text { fill: var(--mute); font-size: 10px; }
-  .empty { color: var(--mute); text-align: center; padding: 26px; }
+  .empty { color: var(--mute); text-align: center; padding: 22px; }
   .sub { color: var(--mute); font-weight: 400; text-transform: none; letter-spacing: 0; }
-  .tip { position: fixed; pointer-events: none; z-index: 10; background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+  .tip { position: fixed; pointer-events: none; z-index: 20; background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
     padding: 4px 8px; font-size: 11px; box-shadow: 0 4px 14px rgba(0,0,0,.18); display: none; white-space: nowrap; }
   .scroll { overflow-x: auto; }
   .pin { border-color: var(--accent); }
   .pin dl { display: grid; grid-template-columns: 70px 1fr; gap: 3px 10px; margin: 6px 0 0; }
   .pin dt { color: var(--mute); } .pin dd { margin: 0; overflow-wrap: anywhere; }
+  .pin dd.click { cursor: pointer; border-radius: 4px; } .pin dd.click:hover { background: var(--card); }
   pre { margin: 4px 0; padding: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 6px; max-height: 320px; overflow: auto;
     white-space: pre-wrap; overflow-wrap: anywhere; font: 11px/1.4 ui-monospace, monospace; }
+  mark { background: #ffd166; color: #111; border-radius: 2px; padding: 0 1px; }
+  mark.cur { background: #e5714f; color: #fff; }
+  .md { margin: 4px 0; padding: 8px 10px; background: var(--card); border: 1px solid var(--line); border-radius: 6px; max-height: 320px; overflow: auto; overflow-wrap: anywhere; }
+  .md h1, .md h2, .md h3, .md h4 { margin: 8px 0 4px; font-size: 13px; text-transform: none; letter-spacing: 0; color: var(--fg); display: block; }
+  .md p { margin: 4px 0; } .md ul { margin: 4px 0; padding-left: 18px; } .md code { font: 11px ui-monospace, monospace; background: var(--card); padding: 0 3px; border-radius: 3px; }
+  .md pre { max-height: 200px; }
+  .jtree { margin: 4px 0; padding: 8px; background: var(--card); border: 1px solid var(--line); border-radius: 6px; max-height: 320px; overflow: auto; font: 11px/1.45 ui-monospace, monospace; }
+  .jtree details { border: 0; padding: 0 0 0 12px; } .jtree summary { gap: 4px; }
+  .jk { color: var(--accent); } .js { color: var(--good); } .jn { color: var(--c-toolCalls); }
   details { border-bottom: 1px solid var(--line); padding: 3px 0; }
-  summary { cursor: pointer; display: flex; gap: 8px; align-items: center; }
+  summary { cursor: pointer; display: flex; gap: 6px; align-items: center; }
   summary b { margin-left: auto; font-weight: 500; font-variant-numeric: tabular-nums; }
-  .item { display: grid; grid-template-columns: 44px minmax(0,1fr) 54px; gap: 6px; padding: 2px 0 2px 16px; cursor: pointer; }
-  .item:hover { background: var(--card); } .item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .item { display: grid; grid-template-columns: 44px minmax(0,1fr) 54px; gap: 6px; padding: 2px 0 2px 14px; cursor: pointer; align-items: center; }
+  .item:hover, .item.hl { background: color-mix(in srgb, var(--accent) 16%, transparent); border-radius: 4px; }
+  .item span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .detail { margin: 2px 0 6px 14px; }
   .mono { font-family: ui-monospace, monospace; font-size: 11.5px; }
-  .field { display: grid; grid-template-columns: 170px minmax(0,1fr); gap: 6px 12px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line); }
+  .field { display: grid; grid-template-columns: 180px minmax(0,1fr); gap: 6px 12px; align-items: center; padding: 5px 0; border-bottom: 1px solid var(--line); }
   .field small { color: var(--mute); display: block; }
   .node { position: relative; }
+  .node::before { content: ""; position: absolute; left: -10px; top: 50%; width: 10px; border-top: 1px solid var(--line); }
+  .node.root::before { display: none; }
   .pulse { width: 8px; height: 8px; border-radius: 50%; background: var(--good); display: inline-block; animation: pulse 1.4s infinite; }
   @keyframes pulse { 50% { opacity: .25; } }
   @media (prefers-reduced-motion: reduce) { .pulse { animation: none; } }
-  .toast { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 6px 14px; border-radius: 999px; z-index: 20; display: none; }
+  .toast { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); background: var(--fg); color: var(--bg); padding: 6px 14px; border-radius: 999px; z-index: 30; display: none; }
+  .bar2 { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--line); margin: 6px 0; }
+  .bar2 i { display: block; }
+  .lane { display: grid; grid-template-columns: 110px minmax(0,1fr); gap: 8px; align-items: center; padding: 3px 0; }
+  .lane .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; } .lane .nm.sel { font-weight: 700; color: var(--accent); }
+  .attach { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0; }
+  .acard { display: flex; gap: 8px; align-items: center; padding: 6px 8px; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); max-width: 260px; cursor: pointer; }
+  .acard img { width: 42px; height: 42px; object-fit: cover; border-radius: 4px; flex: none; background: var(--card); }
+  .modal { position: fixed; inset: 0; background: rgba(0,0,0,.72); z-index: 40; display: flex; align-items: center; justify-content: center; padding: 20px; }
+  .modal img { max-width: 100%; max-height: 90vh; border-radius: 8px; background: #fff; }
+  .pickpop { position: relative; }
+  .pickmenu { position: absolute; right: 0; top: 100%; margin-top: 4px; width: 280px; max-height: 280px; overflow: auto; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px; z-index: 15; box-shadow: 0 6px 20px rgba(0,0,0,.22); }
+  .pickopt { padding: 4px 6px; border-radius: 4px; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pickopt:hover, .pickopt.on { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+  .pager { display: flex; gap: 8px; align-items: center; justify-content: center; margin-top: 4px; }
+  .tbox { display: grid; grid-template-columns: 44px minmax(0,1fr) auto; align-items: stretch; }
 </style>
 </head>
 <body>
@@ -105,78 +144,135 @@
   <button class="ghost" id="refresh" title="Refresh">↻</button>
 </header>
 <main id="app"><div class="empty">…</div></main>
-<div class="tip" id="tip"></div><div class="toast" id="toast"></div>
+<div class="tip" id="tip"></div><div class="toast" id="toast"></div><div id="modal"></div>
+<style id="hlstyle"></style>
 
 <script>
-const zh = /^zh/i.test(navigator.language);
+let zh = /^zh/i.test(navigator.language);
 const I = {
   insights: ['Insights', '洞察'], context: ['Context', '上下文'], fleet: ['Fleet', '编队'], settings: ['Settings', '设置'],
   vOverview: ['Overview', '概览'], vBrowser: ['Browser', '浏览器'], vEvents: ['Events', '事件'], vFiles: ['Files', '文件'], vCommands: ['Commands', '命令'],
-  side: ['Side question', '旁路提问'], copyBtw: ['Copy /btw', '复制 /btw'], 
+  side: ['Side question', '旁路提问'], copyBtw: ['Copy /btw', '复制 /btw'],
   sideTip: ['Start an isolated side conversation with the report (main chat untouched)', '用报告开一个独立的旁路对话(不影响当前对话)'],
   btwTip: ['Copy a /btw command to paste into the composer', '复制 /btw 命令,粘贴到输入框即用原生 /btw'],
   sideOk: ['Side conversation started', '已开启旁路对话'], btwOk: ['Copied — paste after /btw in the composer', '已复制,粘贴到输入框(以 /btw 开头)'],
-  back: ['← All', '← 返回'], d7: ['7 days', '近 7 天'], d30: ['30 days', '近 30 天'], d90: ['90 days', '近 90 天'], all: ['All time', '全部'],
+  back: ['← All', '← 返回'], today: ['Today', '今天'], d7: ['7 days', '近 7 天'], d30: ['30 days', '近 30 天'], d90: ['90 days', '近 90 天'], all: ['All time', '全部'],
   ctxNow: ['Context now', '当前上下文'], peak: ['Peak', '峰值'], req: ['Requests', '模型请求'], steps: ['Steps', '步骤'],
   turns: ['Turns', '轮次'], cache: ['Cache hit', '缓存命中'], fresh: ['Fresh input', '新输入'], out: ['Output', '输出'],
-  cacheRead: ['Cache read', '缓存读取'], tools: ['Tool calls', '工具调用'], convs: ['Conversations', '会话数'],
-  ckpt: ['Truncations', '上下文截断'], errors: ['Errors', '错误'], cost: ['Est. cost', '估算成本'], costTip: ['from rates in Settings', '按设置中的单价'],
-  statsCtx: ['Context Stats', '上下文统计'], statsTok: ['Token Stats', 'Token 统计'], statsTime: ['Timing Stats', '耗时统计'],
-  activeTime: ['Active time', '活跃时长'], modelTime: ['Model', '模型'], toolTime: ['Tools', '工具'],
+  cacheRead: ['Cache read', '缓存读取'], tools: ['Tool calls', '工具调用'], convs: ['Active sessions', '活跃会话'],
+  ckpt: ['Truncations', '上下文截断'], errors: ['Errors', '错误'], cost: ['Est. cost', '估算成本'], costTip: ['reference estimate · configurable in Settings', '参考估算 · 可在设置中自定义单价'],
+  pricedSub: ['priced', '已计价'], ofTotal: ['of total', '共'], archived_: ['archived', '已归档'],
+  statsTok: ['Token Stats', 'Token 统计'],
+  activeTime: ['Active time', '活跃时长'], modelTime: ['Model', '模型'], toolTime: ['Tools', '工具'], overheadTime: ['Overhead', '开销'],
+  timing: ['Timing Stats', '耗时统计'], userIn: ['User inputs', '用户输入'], answers_: ['Answers', '模型回复'], agentNet: ['Agent network', 'Agent 网络'],
+  subCost: ['Subagents', '子 Agent'],
   nowCtx: ['Current context', '当前上下文'], nowNote: ['calibrated to the real request size', '已按真实请求大小校准'],
   free: ['Free', '剩余'], base: ['System prompt, tools & rules', '系统提示词、工具与规则'], ofWindow: ['of window', '占窗口'],
-  comp: ['Content composition', '内容组成'], compNote: ['estimated tokens', '估算 token'],
+  compactAt: ['auto-compact ≈', '自动压缩 ≈'], inferred: ['inferred from', '推断自'], untilCompact: ['to compaction', '距压缩'], outRes: ['output reserve', '输出预留'], winModel: ['model', '模型窗口'], winDef: ['default', '默认设置'],
+  comp: ['Content composition', '内容组成'], compNote: ['estimated tokens', '估算 token'], toolAll: ['Tool calls', '工具调用'],
   trend: ['Context trend', '上下文趋势'], gStep: ['Step', '步骤'], gTurn: ['Turn', '轮次'], mTotal: ['Total', '累计'], mDelta: ['Delta', '增量'],
-  ovw: ['Fit to width', '适应宽度'], trendNote: ['✂ = checkpoint · click a bar to pin', '✂ = 检查点 · 点击柱子固定'],
-  pinned: ['Pinned request', '已固定的请求'], actual: ['Actual', '实际'], prompt: ['prompt', '提示'], user_: ['User', '用户'], inn: ['In', '输入'], resp: ['Response', '回复'],
-  browse: ['Browse this request →', '浏览该请求 →'],
-  toolsT: ['Tools', '工具'], cmds: ['Programs', '程序'], skills: ['Skills loaded', '加载的技能'], filesT: ['File activity', '文件活动'],
+  ovw: ['Overview', '总览'], adapt: ['Adaptive', '自适应'], curves: ['Duration', '耗时曲线'], dnaMode: ['DNA', 'DNA 模式'],
+  trendNote: ['✂ = checkpoint · hover to preview · click a bar to pin', '✂ = 检查点 · 悬停预览 · 点击柱子固定'],
+  trendNoteOvw: ['hover a band to highlight a category · click to open it in Browser', '悬停色带高亮类别 · 点击在浏览器中展开'],
+  trendNoteDna: ['click an item stripe to highlight it across all bars and locate in Browser', '点击条目色带跨柱高亮并在浏览器中定位'], dnaSel: ['Selected', '已选中'], locateBr: ['Locate in Browser →', '在浏览器中定位 →'], dayScope: ['Active on {day} — KPIs & composition scoped to this day', '{day} 当日活跃 — 统计与组成仅看当日'], sumCalls: ['sum {d}', '各次累计 {d}'],
+  briefTitle: ['Step brief', '步骤摘要'], pinned: ['Pinned', '已固定'], latest: ['Latest', '最新'],
+  actual: ['Actual', '实际'], prompt: ['prompt', '提示'], user_: ['User', '用户'], inn: ['In', '输入'], resp: ['Response', '回复'],
+  browse: ['Browse this request →', '浏览该请求 →'], modelMs: ['model', '模型'], toolMs: ['tools', '工具'],
+  toolsT: ['Tools', '工具'], cmds: ['Programs', '程序'], skillsT: ['Skills loaded', '加载的技能'], filesT: ['File activity', '文件活动'],
   turnsT: ['Turns', '各轮次'], heavy: ['Heaviest first', '增长最多优先'], chrono: ['Chronological', '按时间'],
   start: ['Start', '起始'], growth: ['Growth', '增长'], reqs: ['Req', '请求'], tl: ['Tools', '工具'],
-  last7: ['Last 7 days', '最近 7 天'], heat: ['Activity (requests/day, 8 weeks)', '活跃度(请求/天,近 8 周)'],
-  convList: ['Conversations', '会话'], sortRecent: ['Recent', '最近'], sortPeak: ['Peak', '峰值'], sortTok: ['Tokens', 'Token'],
-  search: ['Search…', '搜索…'], group: ['Group by project', '按项目分组'], clear: ['Clear filters', '清除筛选'],
+  last7: ['Last 7 days', '最近 7 天'], heat: ['Activity (8 weeks)', '活跃度(近 8 周)'],
+  hTok: ['Tokens', 'Token'], hSess: ['Sessions', '会话数'], less: ['Less', '少'], more: ['More', '多'],
+  convList: ['Conversations', '会话'], sortRecent: ['Recent', '最近'], sortPeak: ['Peak', '峰值'], sortTok: ['Tokens', 'Token'], sortCtx: ['Context', '上下文'],
+  search: ['Search title / workspace / message…', '搜索标题 / 工作区 / 消息…'], group: ['Group', '分组'],
+  archActive: ['Hide archived', '隐藏已归档'], archAll: ['All (incl. archived)', '全部(含归档)'], archOnly: ['Archived only', '仅已归档'],
+  from_: ['From', '起'], to_: ['To', '止'], page_: ['Page', '第'], prev_: ['Prev', '上一页'], next_: ['Next', '下一页'],
   none: ['No data', '暂无数据'], notok: ['No token data (older log)', '无 token 数据(较早日志)'],
-  mReq: ['Requests', '请求数'], mFresh: ['Fresh tokens', '新 token'], mCache: ['Cache read', '缓存读取'],
-  brReq: ['Request', '请求'], brNote: ['items the model saw since the last checkpoint · click to read', '该请求可见内容(自上次检查点起)· 点击查看原文'],
+  mReq: ['Requests', '请求数'], mFresh: ['Fresh tokens', '新 token'], mCache: ['Cache read', '缓存读取'], mCost: ['Cost', '成本'],
+  brReq: ['Request', '请求'], live: ['Live (next request)', '当前(下一次请求)'], brNote: ['items carried since the last checkpoint · click to read', '自上次检查点起携带的内容 · 点击查看原文'],
+  vsStep: ['vs prev step', '比前步'], vsTurn: ['vs prev turn', '比前轮'], catMode: ['Categories', '分类'], dna: ['DNA', 'DNA'],
+  deltaOnly: ['Added only', '仅看新增'], treemap: ['Treemap', '矩形树图'],
+  bySize: ['Size', '按大小'], byCount: ['Count', '按次数'], byName: ['Name', '按名称'], byOrder: ['Order', '按顺序'],
+  filterItems: ['Filter items…', '筛选条目…'], items: ['items', '项'], pickStep: ['Filter steps…', '筛选步骤…'],
+  grpAll: ['All', '全部'], ungrouped: ['Ungrouped', '未分组'], showMore: ['Show +{n} more', '展开 +{n} 项'], showLess: ['Show less', '收起'],
+  rawT: ['Raw', '原文'], mdT: ['Markdown', 'Markdown'], jsonT: ['JSON', 'JSON'], copyT: ['Copy', '复制'], minT: ['Min', '紧凑'], copied: ['Copied', '已复制'],
+  findPh: ['Find…', '查找…'], argsT: ['arguments', '参数'], lines_: ['lines', '行'], okT: ['OK', '正常'], errT: ['Fail', '失败'],
+  dnaNote: ['read order, newest first · #n = position in the prompt', '按读取顺序,最新在前 · #n = 在提示词中的位置'],
   evTitle: ['Context events', '上下文事件'], evAll: ['All', '全部'], evCompact: ['Compact', '压缩'], evInject: ['Inject', '注入'],
-  evSkill: ['Skill', '技能'], evError: ['Error', '错误'], evUser: ['User', '用户'], dTok: ['Δ tokens', 'Δ token'], when: ['When', '时间'],
+  evSkill: ['Skill', '技能'], evModel: ['Switch', '切换'], evMode: ['Mode', '模式'], evError: ['Error', '错误'], evUser: ['User', '用户'],
+  dTok: ['Δ tokens', 'Δ token'], when: ['When', '时间'],
   fRead: ['Read', '读取'], fWrite: ['Written', '写入'], fSearch: ['Searched', '搜索'], fImg: ['Images', '图片'], fPath: ['Filter path…', '筛选路径…'],
-  lines: ['Lines', '行数'], hits: ['hits', '命中'],
-  cmdRuns: ['Runs', '执行'], cmdFail: ['Failed', '失败'], cmdBg: ['Background', '后台'], cmdTime: ['Total time', '总耗时'], cmdSlow: ['Slowest', '最慢'],
-  cmdFilter: ['Filter commands…', '筛选命令…'], ok: ['ok', '成功'], fail: ['fail', '失败'], bg: ['bg', '后台'],
+  lines: ['Lines', '行数'], hits: ['hits', '命中'], fsCount: ['Count', '次数'], fsLines: ['Lines', '行数'], fsLatest: ['Latest', '最新'], fsPath: ['Path', '路径'], fsName: ['Name', '名称'],
+  cmdRuns: ['Runs', '执行'], cmdCov: ['Showing latest {n} of {total}', '仅覆盖最近 {n} / {total} 次'], loadAll: ['Load all', '加载全部'], cmdFail: ['Failed', '失败'], cmdBg: ['Background', '后台'], cmdTime: ['Total time', '总耗时'], cmdSlow: ['Slowest', '最慢'], cmdLong: ['≥10s', '≥10 秒'],
+  cmdFilter: ['Filter commands…', '筛选命令…'], progFilter: ['Filter programs…', '筛选程序…'], ok: ['ok', '成功'], fail: ['fail', '失败'], bg: ['bg', '后台'],
+  notable: ['Notable', '值得注意'], mostFail: ['Most failing', '失败最多'], mostRep: ['Most repeated', '重复最多'],
+  byDur: ['Slowest', '最慢'], byTime: ['Latest', '最新'], reveal: ['Reveal in Browser', '在浏览器中定位'],
   agents: ['Agents', 'Agent 数'], running: ['Running', '运行中'], main: ['main', '主控'], sub: ['subagent', '子 Agent'], idle: ['idle', '空闲'],
   openChat: ['Open chat', '打开对话'], openCtx: ['Context', '上下文'], noFleet: ['No subagents in this conversation', '该会话没有子 Agent'],
-  sDefaults: ['Defaults', '默认值'], sRange: ['Insights range', '洞察时间范围'], sWindow: ['Context window (tokens)', '上下文窗口(token)'],
-  sRates: ['Rates (USD per 1M tokens)', '单价(美元 / 百万 token)'], sRatesN: ['Set to enable cost estimates; 0 = hidden', '设置后显示成本估算;0 = 隐藏'],
-  sTrend: ['Trend defaults', '趋势默认值'], sSort: ['Conversation sort', '会话排序'],
-  sCustom: ['Custom instructions', '自定义指令'], sCustomN: ['Saved to this plugin’s always-on rule (rules/AGENTS.md) and applied to every conversation. Clear to remove. May need a restart to take effect.', '保存为本插件的常驻规则(rules/AGENTS.md),对所有会话生效;清空即移除。可能需要重启才生效。'],
-  save: ['Save', '保存'], saved: ['Saved', '已保存'],
+  workItems: ['Work items', '工作项'], messages: ['Messages', '消息'], network: ['Agent network', 'Agent 网络'],
+  collab: ['Cross-agent timeline', '跨 Agent 协作'], hideQuiet: ['Hide quiet lanes', '隐藏安静泳道'], showQuiet: ['Show quiet lanes', '显示安静泳道'],
+  earliest: ['Earliest', '最早'], latestOrd: ['Latest', '最新'], tasksT: ['Collaborating tasks', '协作任务'],
+  inspector: ['Event inspector', '事件检查'], tAll: ['All', '全部'], tRunning: ['In progress', '进行中'], tDone: ['Done', '已完成'],
+  kDelegate: ['delegate', '委派'], kIn: ['received', '收到'], kOut: ['sent', '发出'], report: ['Final report', '最终回报'], brief_: ['Brief', '任务简报'],
+  source: ['Source', '来源'], rawStep: ['Raw step', '原始步骤'], filterEv: ['Filter…', '筛选…'],
+  pluginInfo: ['Plugin Info', '插件信息'], openSet: ['Settings', '插件设置'],
+  sEntry: ['Entry & Visibility', '入口与可见性'], sView: ['View Defaults', '视图默认值'], sPrompt: ['System Prompt', '系统提示词'], sAlwaysOvw: ['Always start trend in Overview', '趋势图默认开启总览'],
+  sRange: ['Insights range', '洞察默认时间范围'], sWindow: ['Fallback context window', '默认上下文窗口(token)'],
+  sAutoPrice: ['Auto reference pricing', '自动参考计价'], sCurrency: ['Currency', '货币单位'],
+  sRates: ['Custom rates (USD / 1M)', '自定义单价(美元 / 百万)'], sRatesN: ['Overrides reference pricing when > 0 — Input / Cache read / Output', '大于 0 时覆盖参考价 — 新输入 / 缓存读取 / 输出'],
+  sSort: ['Conversation sort', '会话排序'], sAuto: ['Trend auto-overview (bars)', '趋势自动总览阈值'], sOff: ['Off', '不启用'],
+  sBase: ['Browser diff baseline', '浏览器对比基线'], sToolSort: ['Tool sort', '工具排序'], sFileSort: ['File activity sort', '文件活动排序'], sLang: ['Language', '语言'],
+  sShowIns: ['Insights tab', '洞察标签页'], sShowFleet: ['Fleet tab', '编队标签页'],
+  sPrefix: ['Prefix', '前缀'], sSuffix: ['Suffix', '后缀'],
+  sPromptN: ['Saved to this plugin’s always-on rule (rules/AGENTS.md), applied to every conversation. Clear both to remove. May need a restart.', '保存为本插件常驻规则(rules/AGENTS.md),对所有会话生效;清空即移除。可能需要重启生效。'],
+  save: ['Save', '保存'], saved: ['Saved', '已保存'], auto: ['Auto', '自动'],
   user: ['User messages', '用户消息'], system: ['System / checkpoints', '系统 / 检查点'], reasoning: ['Reasoning', '推理'],
   answer: ['Answers', '回答'], toolCalls: ['Tool call args', '工具调用参数'], commands: ['Command output', '命令输出'],
   files: ['File reads', '文件读取'], edits: ['Edit results', '编辑结果'], search_: ['Search & web', '搜索与网页'],
-  mcp: ['MCP tools', 'MCP 工具'], other: ['Other results', '其他结果'],
+  mcp: ['MCP tools', 'MCP 工具'], other: ['Other results', '其他结果'], skills: ['Skill injections', '技能注入'],
+  ago_now: ['now', '刚刚'], sessShort: ['sess', '会话'], callsShort: ['calls', '次'],
 };
 const t = (k) => (I[k] || [k, k])[zh ? 1 : 0];
-const SRV = ['user', 'system', 'reasoning', 'answer', 'toolCalls', 'commands', 'files', 'edits', 'search', 'mcp', 'other'];
-const ORDER = ['base', 'system', 'user', 'reasoning', 'answer', 'toolCalls', 'commands', 'files', 'edits', 'search', 'mcp', 'other'];
-const COMP = ['commands', 'files', 'toolCalls', 'reasoning', 'search', 'edits', 'system', 'answer', 'user', 'mcp', 'other'];
-const cLabel = (k) => (k === 'search' ? t('search_') : k === 'base' ? t('base') : t(k));
+const SRV = ['user', 'system', 'reasoning', 'answer', 'toolCalls', 'commands', 'files', 'edits', 'search', 'mcp', 'other', 'skills'];
+const ORDER = ['base', 'system', 'user', 'reasoning', 'answer', 'toolCalls', 'commands', 'files', 'skills', 'edits', 'search', 'mcp', 'other'];
+const COMP = ['commands', 'files', 'toolCalls', 'reasoning', 'search', 'edits', 'skills', 'system', 'answer', 'user', 'mcp', 'other'];
+const cLabel = (k) => (k === 'search' ? t('search_') : k === 'base' ? t('base') : k === 'toolAll' ? t('toolAll') : t(k));
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const K = (n) => { const a = Math.abs(n); return (n < 0 ? '−' : '') + (a >= 1e9 ? (a / 1e9).toFixed(2) + 'B' : a >= 1e6 ? (a / 1e6).toFixed(2) + 'M' : a >= 1e3 ? (a / 1e3).toFixed(1) + 'k' : String(Math.round(a))); };
 const P = (x) => (x * 100).toFixed(1) + '%';
 const D = (ms) => ms >= 3600e3 ? (ms / 3600e3).toFixed(1) + 'h' : ms >= 60e3 ? (ms / 60e3).toFixed(1) + 'm' : (ms / 1e3).toFixed(1) + 's';
-const money = (x) => '$' + (x >= 100 ? x.toFixed(0) : x.toFixed(2));
+const M = (usd) => {
+  const cny = S.st?.currency === 'CNY';
+  const v = cny ? usd / 0.15 : usd;
+  return (cny ? '¥' : '$') + (v >= 100 ? v.toFixed(0) : v.toFixed(2));
+};
 const when = (ts) => ts ? new Date(ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : '-';
+const ago = (ts) => { if (!ts) return ''; const m = (Date.now() - ts) / 6e4; return m < 1 ? t('ago_now') : m < 60 ? Math.round(m) + 'm' : m < 1440 ? Math.round(m / 60) + 'h' : Math.round(m / 1440) + 'd'; };
 const short = (p) => { const parts = String(p).split('/'); return parts.length > 3 ? '…/' + parts.slice(-3).join('/') : p; };
+const sum = (a) => a.reduce((x, y) => x + y, 0);
+const extGlyph = (p) => {
+  const m = /\.([A-Za-z0-9]{1,6})$/.exec(p);
+  if (!m) return 'DIR';
+  const e = m[1].toUpperCase();
+  return e.length > 4 ? e.slice(0, 4) : e;
+};
+const copyText = async (txt) => {
+  try { await navigator.clipboard.writeText(txt); } catch {
+    const ta = document.createElement('textarea'); ta.value = txt; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+  }
+  toast(t('copied'));
+};
 
 const S = {
-  tab: 'context', view: 'overview', convId: null, st: null, d: null, o: null, fl: null,
-  gran: 'step', mode: 'total', ovw: false, pin: null, browseK: null, turnOrder: 'heavy', metric: 'mFresh',
-  f: { tool: null, cmd: null, skill: null, day: null, q: '' }, sort: 'recent', group: false,
-  ev: 'all', fileF: 'all', fileQ: '', openFile: null, cmdF: 'all', cmdQ: '', cmdProg: null, openCmd: null, stepView: {},
-  browse: null,
+  tab: 'context', view: 'overview', convId: null, st: null, pinfo: null, d: null, o: null, fl: null,
+  gran: 'step', mode: 'total', ovwUser: null, adapt: false, curves: false, trendDna: false, dnaCache: null, dnaItem: null,
+  pin: null, hoverIdx: null, tPinnedRight: true, browseK: 0, pickOpen: false, pickQ: '', turnOrder: 'heavy', metric: 'mFresh', heatMetric: 'hTok',
+  f: { tool: null, cmd: null, skill: null, day: null, grp: null, q: '' }, from: '', to: '', archived: 'active', page: 0, sort: 'recent', group: false, exp: {},
+  ev: 'all', fileF: 'all', fileQ: '', fileSort: 'lines', openFile: null, cmdF: 'all', cmdQ: '', progQ: '', cmdSort: 'time',
+  stepView: {}, vmode: {}, findQ: {}, findIdx: {}, mediaCache: {},
+  browse: null, bq: '', bsort: 'size', toolSort: 'count', bmode: 'cat', bdelta: false, btreemap: false, cmp: 'step', openCat: null, hlStep: null, autoExpandStep: null, allCmds: null, dnaMeta: null,
+  flAgent: null, flKind: 'all', flQ: '', flTask: 'all', flOpen: null, flHide: false, flOrder: 'latest', flStep: {},
 };
 let timer = null;
 const api = async (path, body) => {
@@ -185,225 +281,557 @@ const api = async (path, body) => {
   return r.json();
 };
 const curId = () => S.convId || window.sidecar.conversationId || undefined;
-function toast(msg) { const e = $('#toast'); e.textContent = msg; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => { e.style.display = 'none'; }, 2600); }
+function toast(msg) { const e = $('#toast'); e.textContent = msg; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => { e.style.display = 'none'; }, 2400); }
 
 // ------------------------------------------------------------ shared components
-const kpi = (l, v, s = '', cls = '', tip = '') => `<div class="card kpi" ${tip ? `title="${esc(tip)}"` : ''}><div class="l">${l}</div><div class="v ${cls}">${v}</div><div class="s">${s}</div></div>`;
+const kpi = (l, v, s = '', cls = '', tip = '', act = '') => `<div class="card kpi" ${tip ? `title="${esc(tip)}"` : ''} ${act ? `data-act="${act}" style="cursor:pointer"` : ''}><div class="l">${l}</div><div class="v ${cls}">${v}</div><div class="s">${s}</div></div>`;
 const tot = (c, keys = COMP) => keys.reduce((a, k) => a + (c[k] || 0), 0) || 1;
-function stackBar(comp, h) {
-  const total = tot(comp);
-  return `<div class="stack" ${h ? `style="height:${h}px"` : ''}>${COMP.filter((k) => comp[k]).map((k) =>
+const convWin = (d) => d?.pricing?.window || S.st?.contextWindow || 1000000;
+function stackBar(comp, h, keys = COMP) {
+  const total = tot(comp, keys);
+  return `<div class="stack" ${h ? `style="height:${h}px"` : ''}>${keys.filter((k) => comp[k]).map((k) =>
     `<i style="width:${(comp[k] / total) * 100}%;background:var(--c-${k})" title="${cLabel(k)} ${K(comp[k])} (${P(comp[k] / total)})"></i>`).join('')}</div>`;
+}
+function donut(comp) {
+  const total = tot(comp), r = 38, C = 2 * Math.PI * r;
+  let off = 0;
+  const arcs = COMP.filter((k) => comp[k] > 0).map((k) => {
+    const len = (comp[k] / total) * C;
+    const e = `<circle r="${r}" cx="50" cy="50" fill="none" stroke="var(--c-${k})" stroke-width="14" stroke-dasharray="${len} ${C - len}" stroke-dashoffset="${-off}" transform="rotate(-90 50 50)"><title>${cLabel(k)} ${K(comp[k])} (${P(comp[k] / total)})</title></circle>`;
+    off += len; return e;
+  }).join('');
+  return `<svg viewBox="0 0 100 100" width="130" height="130" style="flex:none">${arcs}<text x="50" y="54" text-anchor="middle" style="font-size:12px;fill:var(--fg);font-weight:600">${K(COMP.reduce((a, k) => a + (comp[k] || 0), 0))}</text></svg>`;
 }
 function legend(comp, keys = COMP) {
   const total = tot(comp, keys);
   return '<div class="legend">' + keys.filter((k) => comp[k] > 0).sort((a, b) => comp[b] - comp[a]).map((k) =>
     `<div><span class="dot" style="background:var(--c-${k})"></span><em>${cLabel(k)}</em><b>${K(comp[k])} · ${P(comp[k] / total)}</b></div>`).join('') + '</div>';
 }
-function bars(list, { fmt = (x) => x, act = '', sel = null } = {}) {
+function bars(list, { fmt = (x) => x, act = '', sel = null, showSess = false, extra = null } = {}) {
   if (!list.length) return `<div class="empty">${t('none')}</div>`;
   const max = Math.max(...list.map((x) => x.count)) || 1;
-  return list.map((x) => `<div class="row ${act ? 'click' : ''} ${sel === x.name ? 'sel' : ''}" ${act ? `data-act="${act}" data-v="${esc(x.name)}"` : ''} title="${esc(x.name)}">
-    <i class="bar" style="width:${(x.count / max) * 100}%"></i><span>${esc(fmt(x.name))}</span><b>${x.count}</b></div>`).join('');
+  return list.map((x) => `<div class="row ${act ? 'click' : ''} ${sel === x.name ? 'sel' : ''}" ${act ? `data-act="${act}" data-v="${esc(x.name)}"` : ''} title="${esc(x.name)}${x.last ? ' · ' + when(x.last) : ''}">
+    <i class="bar" style="width:${(x.count / max) * 100}%"></i><span>${esc(fmt(x.name))}${extra ? extra(x) : ''}</span>
+    <b>${showSess && x.sessions ? `<small>${x.sessions}${t('sessShort')}</small>` : ''}${x.last ? `<small>${ago(x.last)}</small>` : ''}${x.count}</b></div>`).join('');
 }
-const seg = (items, cur, act) => `<span class="seg">${items.map(([v, l]) => `<button class="${cur === v ? 'on' : ''}" data-act="${act}" data-v="${v}">${l}</button>`).join('')}</span>`;
+const seg = (items, cur, act) => `<span class="seg">${items.map(([v, l]) => `<button class="${String(cur) === String(v) ? 'on' : ''}" data-act="${act}" data-v="${v}">${l}</button>`).join('')}</span>`;
+
+// Rich content viewers (Raw / Markdown / JSON tree + Find + Copy)
+function md(text) {
+  const parts = String(text).split(/```/);
+  return parts.map((seg_, i) => {
+    if (i % 2) return `<pre>${esc(seg_.replace(/^[^\n]*\n/, ''))}</pre>`;
+    const inline = (x) => esc(x).replace(/`([^`]+)`/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<b>$1</b>').replace(/\[([^\]]+)\]\(([^)]+)\)/g, '$1');
+    let out = '', ul = false;
+    for (const ln of seg_.split('\n')) {
+      const h = /^(#{1,4})\s+(.*)/.exec(ln), li = /^\s*(?:[-*]|\d+\.)\s+(.*)/.exec(ln);
+      if (li) { if (!ul) { out += '<ul>'; ul = true; } out += `<li>${inline(li[1])}</li>`; continue; }
+      if (ul) { out += '</ul>'; ul = false; }
+      if (h) out += `<h3>${inline(h[2])}</h3>`; else if (ln.trim()) out += `<p>${inline(ln)}</p>`;
+    }
+    return out + (ul ? '</ul>' : '');
+  }).join('');
+}
+function tryJson(text) {
+  const s = String(text || '').trim();
+  if (!s || (s[0] !== '{' && s[0] !== '[')) return null;
+  try { return JSON.parse(s); } catch { return null; }
+}
+function jsonNode(val, key, path, depth) {
+  const kHtml = key != null ? `<span class="jk click" data-act="cpj" data-v="${esc(path)}" title="Copy path: ${esc(path)}">${esc(key)}</span>: ` : '';
+  if (val === null || typeof val !== 'object') {
+    const cls = typeof val === 'string' ? 'js' : typeof val === 'number' ? 'jn' : 'mute';
+    const raw = typeof val === 'string' ? `"${val}"` : String(val);
+    return `<div>${kHtml}<span class="${cls} click" data-act="cpj" data-v="${esc(typeof val === 'string' ? val : raw)}" title="${esc(path)}">${esc(raw.slice(0, 300))}${raw.length > 300 ? '…' : ''}</span></div>`;
+  }
+  const arr = Array.isArray(val), entries = arr ? val.map((v, i) => [i, v]) : Object.entries(val);
+  const head = `${kHtml}<span class="mute">${arr ? `[${entries.length}]` : `{${entries.length}}`}</span>`;
+  return `<details ${depth < 2 ? 'open' : ''}><summary>${head}<button class="ghost" style="padding:0 5px;font-size:10px" data-act="cpj" data-v="${esc(JSON.stringify(val, null, 2))}">${t('copyT')}</button><button class="ghost" style="padding:0 5px;font-size:10px" data-act="cpj" data-v="${esc(JSON.stringify(val))}">${t('minT')}</button></summary>
+    ${entries.slice(0, 100).map(([k, v]) => jsonNode(v, arr ? null : k, arr ? `${path}[${k}]` : `${path}.${k}`, depth + 1)).join('')}${entries.length > 100 ? `<div class="mute">… +${entries.length - 100}</div>` : ''}</details>`;
+}
+function hiText(text, q, idx) {
+  if (!q) return esc(text);
+  const re = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi');
+  let n = 0, out = '', last = 0;
+  for (const m of text.matchAll(re)) {
+    out += esc(text.slice(last, m.index)) + `<mark class="${n === idx ? 'cur' : ''}">${esc(m[0])}</mark>`;
+    last = m.index + m[0].length; n++;
+    if (n > 200) break;
+  }
+  return out + esc(text.slice(last));
+}
+const stepText = (s, cat) => {
+  if (cat === 'toolCalls' && s.tool_calls) return s.tool_calls;
+  if (cat === 'reasoning' && s.thinking) return s.thinking;
+  if (cat === 'answer' && s.content) return s.content;
+  return [s.thinking && `[reasoning]\n${s.thinking}`, s.content, s.tool_calls && `[tool_calls]\n${s.tool_calls}`].filter(Boolean).join('\n\n') || '(empty)';
+};
+function stepBlock(key, sv, extra = '', cat = '') {
+  if (!sv) return '';
+  const text = stepText(sv, cat), mode = S.vmode[key] || 'raw';
+  const jObj = tryJson(text);
+  const fq = S.findQ[key] || '';
+  let matches = 0;
+  if (fq) { try { matches = (text.match(new RegExp(fq.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'gi')) || []).length; } catch {} }
+  const curIdx = matches ? ((S.findIdx[key] || 0) % matches + matches) % matches : 0;
+  const body = mode === 'json' && jObj
+    ? `<div class="jtree">${jsonNode(jObj, null, '$', 0)}</div>`
+    : mode === 'md'
+      ? `<div class="md">${md(text)}</div>`
+      : `<pre id="pre_${esc(key)}">${hiText(text, fq, curIdx)}</pre>`;
+  return `<div class="detail">${extra}<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:3px">
+    <span class="seg"><button class="${mode === 'raw' ? 'on' : ''}" data-act="vm" data-v="${key}|raw">${t('rawT')}</button><button class="${mode === 'md' ? 'on' : ''}" data-act="vm" data-v="${key}|md">${t('mdT')}</button>${jObj ? `<button class="${mode === 'json' ? 'on' : ''}" data-act="vm" data-v="${key}|json">${t('jsonT')}</button>` : ''}</span>
+    <button class="ghost" data-act="cpstep" data-v="${key}|${esc(cat)}">${t('copyT')}</button>
+    <input placeholder="${t('findPh')}" value="${esc(fq)}" data-find="${key}" style="width:110px;padding:1px 6px">
+    ${fq ? `<span class="mute">${matches ? `${curIdx + 1}/${matches}` : '0'}</span><button class="ghost" data-act="fprev" data-v="${key}">‹</button><button class="ghost" data-act="fnext" data-v="${key}">›</button>` : ''}
+    <span class="mute">${text.split('\n').length} ${t('lines_')}</span></div>${body}</div>`;
+}
+function attachCards(media) {
+  if (!media?.length) return '';
+  return `<div class="attach">${media.map((m) => {
+    const c = S.mediaCache[m.uri];
+    if (!c && c !== false) { S.mediaCache[m.uri] = false; api('/api/media', { id: S.d?.id || curId(), uri: m.uri }).then((r) => { S.mediaCache[m.uri] = r && r.dataUrl ? r : null; render(true); }).catch(() => { S.mediaCache[m.uri] = null; }); }
+    return `<div class="acard" ${c?.dataUrl ? `data-act="zoom" data-v="${esc(m.uri)}"` : ''} title="${esc(m.uri)}">
+      ${c?.dataUrl ? `<img src="${c.dataUrl}">` : `<span class="glyph">IMG</span>`}
+      <div style="min-width:0"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">${esc(m.uri.split('/').pop() || short(m.uri))}</div>
+      <div class="mute">${esc(m.mime || 'image')}${c?.width ? ` · ${c.width}×${c.height}` : ''}${c?.size ? ` · ${K(c.size)}B` : ''} · ≈${c?.estTokens || 512} tok</div></div></div>`;
+  }).join('')}</div>`;
+}
 
 // ------------------------------------------------------------ INSIGHTS
-function dayChart(days) {
-  const val = (d) => S.metric === 'mReq' ? d.r : S.metric === 'mCache' ? d.c : d.i + d.o;
-  const max = Math.max(...days.map(val), 1);
-  const W = 360, H = 130, B = 18, bw = W / days.length;
+function dayChart(days, hasCost) {
+  const val = (d) => S.metric === 'mReq' ? d.r : S.metric === 'mCache' ? d.c : S.metric === 'mCost' ? d.cost : d.i + d.o;
+  const fmt = (x) => S.metric === 'mCost' ? M(x) : K(x);
+  const max = Math.max(...days.map(val), 1e-9);
+  const maxC = Math.max(...days.map((d) => d.cost || 0), 1e-9);
+  const W = 360, H = 132, B = 18, bw = W / days.length;
   return `<svg viewBox="0 0 ${W} ${H}" width="100%">${days.map((d, i) => {
     const h = (val(d) / max) * (H - B - 14);
-    return `<rect x="${i * bw + 6}" y="${H - B - h}" width="${bw - 12}" height="${Math.max(h, 1)}" rx="3" fill="var(--accent)" opacity="${val(d) ? .85 : .2}" data-act="fday" data-v="${d.day}" style="cursor:pointer"><title>${d.day}: ${K(val(d))}</title></rect>
+    const hc = hasCost && S.metric === 'mFresh' ? ((d.cost || 0) / maxC) * (H - B - 14) : 0;
+    const w = hc ? (bw - 14) / 2 : bw - 12;
+    return `<rect x="${i * bw + 6}" y="${H - B - h}" width="${w}" height="${Math.max(h, 1)}" rx="3" fill="var(--accent)" opacity="${val(d) ? .85 : .2}" data-act="fday" data-v="${d.day}" style="cursor:pointer"><title>${d.day}: ${fmt(val(d))}${d.cost ? ' · ' + M(d.cost) : ''}</title></rect>
+      ${hc ? `<rect x="${i * bw + 8 + w}" y="${H - B - hc}" width="${w}" height="${Math.max(hc, 1)}" rx="3" fill="var(--good)" opacity="${d.cost ? .85 : .15}" data-act="fday" data-v="${d.day}" style="cursor:pointer"><title>${d.day}: ${M(d.cost || 0)}</title></rect>` : ''}
       <text x="${i * bw + bw / 2}" y="${H - 5}" text-anchor="middle">${d.day.slice(5)}</text>
-      ${val(d) ? `<text x="${i * bw + bw / 2}" y="${H - B - h - 3}" text-anchor="middle">${K(val(d))}</text>` : ''}`;
+      ${val(d) ? `<text x="${i * bw + bw / 2}" y="${H - B - Math.max(h, hc) - 3}" text-anchor="middle">${fmt(val(d))}</text>` : ''}`;
   }).join('')}</svg>`;
 }
 function heatmap(days) {
-  const max = Math.max(...days.map((d) => d.r), 1);
+  const v = (d) => S.heatMetric === 'hSess' ? (d.s || 0) : (d.i + d.o);
+  const max = Math.max(...days.map(v), 1);
   const first = new Date(days[0].day + 'T00:00:00').getDay();
+  const cols = Math.ceil((days.length + first) / 7);
+  const L = 24, T = 14;
+  let months = '', lastM = '';
   const cells = days.map((d, i) => {
-    const idx = i + first, col = Math.floor(idx / 7), row = idx % 7;
-    return `<rect x="${col * 14}" y="${row * 14}" width="11" height="11" rx="2" fill="var(--accent)" stroke="${S.f.day === d.day ? 'var(--fg)' : 'none'}" opacity="${d.r ? .15 + .85 * (d.r / max) : .07}" data-act="fday" data-v="${d.day}" style="cursor:pointer"><title>${d.day}: ${d.r}</title></rect>`;
+    const idx = i + first, col = Math.floor(idx / 7), row = idx % 7, m = d.day.slice(0, 7);
+    if (m !== lastM && row === 0) { lastM = m; months += `<text x="${L + col * 14}" y="10">${d.day.slice(5, 7)}</text>`; }
+    return `<rect x="${L + col * 14}" y="${T + row * 14}" width="11" height="11" rx="2" fill="var(--accent)" stroke="${S.f.day === d.day ? 'var(--fg)' : 'none'}" opacity="${v(d) ? .15 + .85 * (v(d) / max) : .07}" data-act="fday" data-v="${d.day}" style="cursor:pointer"><title>${d.day}: ${S.heatMetric === 'hSess' ? v(d) + ' ' + t('sessShort') : K(v(d)) + ' tok'}</title></rect>`;
   }).join('');
-  return `<svg viewBox="0 0 ${Math.ceil((days.length + first) / 7) * 14} 98" width="100%" style="max-height:130px">${cells}</svg>`;
+  const wd = [[1, 'M'], [3, 'W'], [5, 'F']].map(([r, l]) => `<text x="0" y="${T + r * 14 + 9}">${l}</text>`).join('');
+  return `<svg viewBox="0 0 ${L + cols * 14} ${T + 98}" width="100%" style="max-height:135px">${months}${wd}${cells}</svg>
+    <div class="meta" style="justify-content:flex-end;margin-top:4px"><span>${t('less')}</span>${[0.1, 0.3, 0.55, 0.8, 1].map((o) => `<span class="dot" style="background:var(--accent);opacity:${o}"></span>`).join('')}<span>${t('more')}</span></div>`;
 }
 function convCard(c) {
   return `<div class="card conv" data-act="openconv" data-v="${c.id}">
-    <div class="t" title="${esc(c.title)}">${esc(c.title || c.id)}</div>${stackBar(c.comp, 8)}
-    <div class="meta"><span>${when(c.last)}</span><span>${c.turns} ${t('turns').toLowerCase()}</span>
+    <div style="display:flex;gap:6px;align-items:center;min-width:0"><span class="t" style="flex:1" title="${esc(c.title)}">${esc(c.title || c.id)}</span>
+      ${c.running ? '<span class="pulse" title="running"></span>' : ''}${c.archived ? `<span class="chip">${t('archived_')}</span>` : ''}</div>
+    ${stackBar(c.comp, 8)}
+    ${c.lastUser ? `<div class="mute" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px">${esc(c.lastUser)}</div>` : ''}
+    <div class="meta"><span>${when(c.last)}</span><span>${c.turns} ${t('turns').toLowerCase()} · ${c.steps} ${t('steps').toLowerCase()}</span>
       ${c.hasTokens ? `<span>${t('peak')} ${K(c.peak)}</span><span>${t('cache')} ${P(c.tokens.cache / ((c.tokens.cache + c.tokens.input) || 1))}</span>` : `<span>${t('notok')}</span>`}
-      ${c.cost ? `<span>${money(c.cost)}</span>` : ''}${c.children ? `<span class="chip">⛓ ${c.children}</span>` : ''}
+      ${c.cost ? `<span>${M(c.cost)}</span>` : ''}${c.teamCost ? `<span class="chip">⛓ ${c.children} · ${K(c.teamTokens)} · ${M(c.teamCost)}</span>` : c.children ? `<span class="chip">⛓ ${c.children}</span>` : ''}
+      ${c.model ? `<span class="chip">${esc(c.model.replace(/\s*\([^)]+\)/, ''))}</span>` : ''}
       ${c.project && !S.group ? `<span class="chip">${esc(c.project)}</span>` : ''}${c.checkpoints ? `<span class="chip warn">✂ ${c.checkpoints}</span>` : ''}</div></div>`;
 }
 function viewInsights(o) {
-  const T = o.totals;
-  const F = S.f;
+  const T = o.totals, F = S.f;
   let list = [...o.conversations];
+  const grpCounts = {};
+  list.forEach((c) => { const g = c.workspace || c.project || ''; grpCounts[g] = (grpCounts[g] || 0) + 1; });
+  const grpEntries = Object.entries(grpCounts).sort((a, b) => b[1] - a[1]);
+  if (F.grp !== null) list = list.filter((c) => (c.workspace || c.project || '') === F.grp);
   if (F.tool) list = list.filter((c) => c.toolNames.includes(F.tool));
   if (F.cmd) list = list.filter((c) => c.cmdNames.includes(F.cmd));
   if (F.skill) list = list.filter((c) => c.skillNames.includes(F.skill));
   if (F.day) list = list.filter((c) => c.activeDays.includes(F.day));
-  if (F.q) { const q = F.q.toLowerCase(); list = list.filter((c) => (c.title + ' ' + c.project + ' ' + c.id).toLowerCase().includes(q)); }
+  if (F.q) { const q = F.q.toLowerCase(); list = list.filter((c) => (c.title + ' ' + c.workspace + ' ' + c.project + ' ' + c.lastUser + ' ' + c.model + ' ' + c.id).toLowerCase().includes(q)); }
   if (S.sort === 'peak') list.sort((a, b) => b.peak - a.peak);
+  if (S.sort === 'ctx') list.sort((a, b) => b.lastCtx - a.lastCtx);
   if (S.sort === 'tok') list.sort((a, b) => (b.tokens.input + b.tokens.output) - (a.tokens.input + a.tokens.output));
-  const active = Object.entries(F).filter(([k, v]) => v && k !== 'q');
+  const pages = Math.max(1, Math.ceil(list.length / 20));
+  if (S.page >= pages) S.page = 0;
+  const pageList = S.group ? list : list.slice(S.page * 20, (S.page + 1) * 20);
+  const active = Object.entries(F).filter(([k, v]) => v !== null && v !== '' && k !== 'q');
   const act = o.timing.model + o.timing.tool;
-  const mb = (m) => `<button class="${S.metric === m ? 'on' : ''}" data-act="metric" data-v="${m}">${t(m)}</button>`;
+  const metrics = [['mFresh', t('mFresh')], ['mCache', t('mCache')], ['mReq', t('mReq')], ...(o.cost ? [['mCost', t('mCost')]] : [])];
   let convHtml;
   if (S.group) {
     const groups = {};
-    list.forEach((c) => (groups[c.project || '—'] ||= []).push(c));
+    pageList.forEach((c) => (groups[c.workspace || c.project || '—'] ||= []).push(c));
     convHtml = Object.entries(groups).sort((a, b) => b[1][0].last - a[1][0].last).map(([p, cs]) =>
       `<h2 class="mute" style="margin:10px 2px 6px;font-size:12px">${esc(p)} <span class="sub">· ${cs.length}</span></h2><div class="cols" style="grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr))">${cs.map(convCard).join('')}</div>`).join('');
-  } else convHtml = `<div class="cols" style="grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr))">${list.map(convCard).join('')}</div>`;
-  return `<div class="kpis">
-    ${kpi(t('convs'), T.convs, `${T.turns} ${t('turns').toLowerCase()}`)}
-    ${kpi(t('req'), K(T.requests), `${K(T.toolCalls)} ${t('tools').toLowerCase()}`)}
+  } else convHtml = `<div class="cols" style="grid-template-columns:repeat(auto-fill,minmax(min(320px,100%),1fr))">${pageList.map(convCard).join('')}</div>`;
+  const range = [[1, t('today')], [7, t('d7')], [30, t('d30')], [90, t('d90')], [0, t('all')]];
+  const sumCalls = (a) => a.reduce((x, y) => x + y.count, 0);
+  const expBars = (arr, kind, opts) => {
+    const open = !!S.exp[kind], shown = open ? arr : arr.slice(0, 10), rem = arr.length - 10;
+    return bars(shown, opts) + (rem > 0 ? `<button class="ghost" style="margin-top:4px;font-size:11px" data-act="exp" data-v="${kind}">${open ? t('showLess') : t('showMore').replace('{n}', rem)}</button>` : '');
+  };
+  return `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    ${seg(range, S.from || S.to ? -1 : o.days, 'range')}
+    <span class="meta" style="gap:4px">${t('from_')}<input type="date" id="dfrom" value="${esc(S.from)}">${t('to_')}<input type="date" id="dto" value="${esc(S.to)}">${S.from || S.to ? `<button class="ghost" data-act="dclear">✕</button>` : ''}</span>
+    ${F.day ? `<span class="chip link on" data-act="fday" data-v="${F.day}">${esc(t('dayScope').replace('{day}', F.day))} ✕</span>` : ''}
+    <select id="archsel" style="margin-left:auto">${[['active', t('archActive')], ['all', t('archAll')], ['archived', t('archOnly')]].map(([v, l]) => `<option value="${v}" ${S.archived === v ? 'selected' : ''}>${l}</option>`).join('')}</select></div>
+  <div class="kpis">
+    ${kpi(t('convs'), T.convs, `${t('ofTotal')} ${T.totalConvs} · ${T.archivedConvs} ${t('archived_')}`)}
+    ${kpi(t('req'), K(T.requests), `${T.turns} ${t('turns').toLowerCase()} · ${K(T.toolCalls)} ${t('tools').toLowerCase()}`)}
     ${kpi(t('fresh'), K(T.input), `${t('out')} ${K(T.output)}`)}
     ${kpi(t('cacheRead'), K(T.cache), `${t('cache')} ${P(o.cacheHit)}`)}
-    ${act ? kpi(t('activeTime'), D(act), `${t('modelTime')} ${P(o.timing.model / act)}`) : ''}
-    ${o.cost ? kpi(t('cost'), money(o.cost), t('costTip')) : ''}</div>
+    ${act ? kpi(t('activeTime'), D(act), `${t('modelTime')} ${P(o.timing.model / act)} · ${t('toolTime')} ${D(o.timing.tool)}`) : ''}
+    ${o.cost ? kpi(t('cost'), M(o.cost), `${t('pricedSub')} ${T.priced}/${T.convs}`, '', t('costTip')) : ''}</div>
   <div class="cols">
-    <div class="card"><h2>${t('last7')}${seg([['mFresh', t('mFresh')], ['mCache', t('mCache')], ['mReq', t('mReq')]], S.metric, 'metric')}</h2>${dayChart(o.last7)}</div>
-    <div class="card"><h2>${t('heat')}</h2>${heatmap(o.heat)}</div></div>
-  <div class="card"><h2>${t('comp')}<span class="sub">${t('compNote')}</span></h2>${stackBar(o.comp)}${legend(o.comp)}</div>
+    <div class="card"><h2>${t('last7')}${seg(metrics, S.metric, 'metric')}</h2>${dayChart(o.last7, o.cost > 0)}</div>
+    <div class="card"><h2>${t('heat')}${seg([['hTok', t('hTok')], ['hSess', t('hSess')]], S.heatMetric, 'hmet')}</h2>${heatmap(o.heat)}</div></div>
+  <div class="card"><h2>${t('comp')}<span class="sub">${t('compNote')}</span></h2><div style="display:flex;gap:14px;align-items:center;flex-wrap:wrap">${donut(o.comp)}<div style="flex:1;min-width:220px">${legend(o.comp)}</div></div></div>
   <div class="cols">
-    <div class="card"><h2>${t('toolsT')}</h2>${bars(o.tools, { act: 'ftool', sel: F.tool })}</div>
-    <div class="card"><h2>${t('cmds')}</h2>${bars(o.cmds, { act: 'fcmd', sel: F.cmd })}</div>
-    <div class="card"><h2>${t('skills')}</h2>${bars(o.skills, { act: 'fskill', sel: F.skill })}</div>
+    <div class="card"><h2>${t('toolsT')} <span class="sub">${o.tools.length} · ${K(sumCalls(o.tools))}</span></h2>${expBars(o.tools, 'tools', { act: 'ftool', sel: F.tool, showSess: true })}</div>
+    <div class="card"><h2>${t('cmds')} <span class="sub">${o.cmds.length} · ${K(sumCalls(o.cmds))}</span></h2>${expBars(o.cmds, 'cmds', { act: 'fcmd', sel: F.cmd, showSess: true })}</div>
+    <div class="card"><h2>${t('skillsT')} <span class="sub">${o.skills.length} · ${K(sumCalls(o.skills))}</span></h2>${expBars(o.skills, 'skills', { act: 'fskill', sel: F.skill, showSess: true, extra: (x) => (x.source ? `<span class="chip">${x.source}</span>` : '') + (x.path ? `<span class="chip link" data-act="cppath" data-v="${esc(x.path)}" title="${esc(x.path)}">${t('copyT')}</span>` : '') })}</div>
     <div class="card"><h2>${t('filesT')}</h2>${bars(o.files, { fmt: short })}</div></div>
   <div class="card" style="border:0;background:none;padding:0"><h2 style="margin:0">${t('convList')} <span class="sub">${list.length}</span>
     <span style="display:flex;gap:6px;flex-wrap:wrap;align-items:center">
-      <input id="q" placeholder="${t('search')}" value="${esc(F.q)}" style="width:150px">
+      <input id="q" placeholder="${t('search')}" value="${esc(F.q)}" style="width:170px">
       <button class="${S.group ? 'on' : ''} ghost" data-act="group">${t('group')}</button>
-      ${seg([['recent', t('sortRecent')], ['peak', t('sortPeak')], ['tok', t('sortTok')]], S.sort, 'sort')}
-      ${active.length ? `<button class="ghost" data-act="fclear">✕ ${active.map(([k, v]) => esc(k === 'day' ? v.slice(5) : v)).join(' · ')}</button>` : ''}</span></h2></div>
-  ${convHtml}`;
+      ${seg([['recent', t('sortRecent')], ['peak', t('sortPeak')], ['ctx', t('sortCtx')], ['tok', t('sortTok')]], S.sort, 'sort')}
+      ${active.length ? `<button class="ghost" data-act="fclear">✕ ${active.map(([k, v]) => esc(k === 'day' ? v.slice(5) : k === 'grp' ? (v ? v.split('/').pop() : t('ungrouped')) : v)).join(' · ')}</button>` : ''}</span></h2></div>
+  ${grpEntries.length > 1 ? `<div class="meta" style="gap:5px"><span class="chip link ${F.grp === null ? 'on' : ''}" data-act="fgrp" data-v="__ALL__">${t('grpAll')} (${o.conversations.length})</span>${grpEntries.map(([g, n]) => `<span class="chip link ${F.grp === g ? 'on' : ''}" data-act="fgrp" data-v="${esc(g)}" title="${esc(g)}">${esc(g ? g.split('/').pop() || g : t('ungrouped'))} (${n})</span>`).join('')}</div>` : ''}
+  ${convHtml}
+  ${!S.group && pages > 1 ? `<div class="pager"><button class="ghost" data-act="pg" data-v="-1" ${S.page <= 0 ? 'disabled' : ''}>${t('prev_')}</button><span class="mute">${t('page_')} ${S.page + 1} / ${pages}</span><button class="ghost" data-act="pg" data-v="1" ${S.page >= pages - 1 ? 'disabled' : ''}>${t('next_')}</button></div>` : ''}`;
 }
 
 // ------------------------------------------------------------ CONTEXT: overview
 const baseOf = (d) => { if (d.baseline != null) return d.baseline; const p = d.series[0]; return p ? Math.max(0, p[2] - p[6].reduce((a, b) => a + b, 0)) : 0; };
-function segs(p, B) { // calibrated composition of the request's context
-  const v = p[6], sumv = v.reduce((a, b) => a + b, 0), R = Math.max(0, p[2] - B), sc = sumv ? R / sumv : 0;
+function segs(p, B) {
+  const v = p[6], sumv = sum(v), R = Math.max(0, p[2] - B), sc = sumv ? R / sumv : 0;
   const o = { base: Math.min(B, p[2]) };
-  SRV.forEach((k, i) => { o[k] = v[i] * sc; });
+  SRV.forEach((k, i) => { o[k] = (v[i] || 0) * sc; });
   return o;
 }
 function trendPoints(d) {
   let pts = d.series;
   if (S.gran === 'turn') {
-    const m = new Map(); pts.forEach((p) => m.set(p[5], p)); pts = [...m.values()].sort((a, b) => a[0] - b[0]);
+    const m = new Map();
+    pts.forEach((p) => {
+      const prev = m.get(p[5]);
+      // keep the turn's peak/latest state while summing model & tool durations across all steps of the turn
+      const copy = [...p];
+      if (prev) { copy[9] = (prev[9] || 0) + (p[9] || 0); copy[10] = (prev[10] || 0) + (p[10] || 0); }
+      m.set(p[5], copy);
+    });
+    pts = [...m.values()].sort((a, b) => a[0] - b[0]);
   }
   return pts;
 }
+function compactAt(d) {
+  const vals = [];
+  for (const c of d.checkpointList || []) {
+    let best = null;
+    for (const p of d.series) if (p[0] <= c.k) best = p; else break;
+    if (best) vals.push(best[2]);
+  }
+  if (!vals.length) return null;
+  vals.sort((a, b) => a - b);
+  return { v: vals[Math.floor(vals.length / 2)], n: vals.length };
+}
 let trendCtx = null;
+const ovwOn = (n) => !S.adapt && !S.trendDna && (S.ovwUser != null ? S.ovwUser : (S.st.trendAutoThreshold > 0 && n > S.st.trendAutoThreshold));
+
 function trendChart(d) {
   const pts = trendPoints(d);
   if (pts.length < 2) return `<div class="empty">${t('none')}</div>`;
-  const B = d.baseline ?? baseOf(d);
-  const sg = pts.map((p) => segs(p, B));
-  const delta = S.mode === 'delta';
+  const ovw = ovwOn(pts.length), delta = S.mode === 'delta';
+  const B = baseOf(d), sg = pts.map((p) => segs(p, B));
+  const L = 44, R = S.curves ? 46 : 8, T = 8, Bt = 20, H = 215;
+  const W = ovw ? 720 : Math.max(720, pts.length * 9 + L + R);
+  const bw = (W - L - R) / pts.length;
+
+  // DNA Trend mode (per-item fingerprint bars)
+  if (S.trendDna && S.dnaCache?.id === d.id) {
+    const reqs = S.dnaCache.requests;
+    if (!reqs.length) return `<div class="empty">${t('none')}</div>`;
+    const strips = reqs.map((r, i) => {
+      if (!delta) return { k: r.k, pos: r.items, neg: [], top: r.ctx, bot: 0 };
+      const prev = i ? reqs[i - 1].items : [];
+      const curSet = new Set(r.items.map((x) => x[0])), prevSet = new Set(prev.map((x) => x[0]));
+      const pos = r.items.filter((x) => !prevSet.has(x[0])), neg = prev.filter((x) => !curSet.has(x[0]));
+      return { k: r.k, pos, neg, top: pos.reduce((a, x) => a + x[2], 0), bot: neg.reduce((a, x) => a + x[2], 0) };
+    });
+    const maxC = Math.max(...strips.map((s) => s.top), 1) * 1.06;
+    const minC = delta ? Math.max(...strips.map((s) => s.bot), 0) * 1.06 : 0;
+    const dw = Math.max(720, reqs.length * 9 + L + R), dbw = (dw - L - R) / reqs.length;
+    const y = (v) => T + (1 - (v + minC) / (maxC + minC)) * (H - T - Bt);
+    let g = '';
+    for (let i = 0; i <= 4; i++) { const v = -minC + ((maxC + minC) / 4) * i; g += `<line x1="${L}" x2="${dw - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 4}" y="${y(v) + 3}" text-anchor="end">${K(v)}</text>`; }
+    let bs = '';
+    strips.forEach((st, i) => {
+      const r = reqs[i], x = L + i * dbw, w = Math.max(dbw - 1.5, 1.2);
+      const sumP = st.pos.reduce((a, x) => a + x[2], 0) || 1;
+      const scP = delta ? 1 : (r.ctx / sumP);
+      let acc = 0;
+      st.pos.forEach(([step, cat, tok, lbl]) => {
+        const h = tok * scP, hl = S.dnaItem === step ? 'stroke="var(--fg)" stroke-width="1.2"' : S.dnaItem != null ? 'opacity=".25"' : '';
+        bs += `<rect data-step="${step}" data-rk="${r.k}" data-cat="${cat}" data-lbl="${esc(lbl)}" data-tok="${tok}" x="${x.toFixed(1)}" y="${y(acc + h).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(y(acc) - y(acc + h), .5).toFixed(1)}" fill="var(--c-${cat})" ${hl}/>`;
+        acc += h;
+      });
+      acc = 0;
+      st.neg.forEach(([step, cat, tok, lbl]) => {
+        const hl = S.dnaItem === step ? 'stroke="var(--fg)" stroke-width="1.2"' : '';
+        bs += `<rect data-step="${step}" data-rk="${i ? reqs[i - 1].k : r.k}" data-cat="${cat}" data-lbl="− ${esc(lbl)}" data-tok="${tok}" x="${x.toFixed(1)}" y="${y(-acc).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(y(-acc - tok) - y(-acc), .5).toFixed(1)}" fill="var(--c-${cat})" opacity=".45" ${hl}/>`;
+        acc += tok;
+      });
+    });
+    const zero = delta ? `<line x1="${L}" x2="${dw - R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--fg)" opacity=".4"/>` : '';
+    trendCtx = { pts, sg, L, bw: dbw, W: dw, R, ovw: false, dna: reqs, T, Bt, H };
+    return `<div class="scroll" id="tscroll"><svg id="trend" viewBox="0 0 ${dw} ${H}" width="${dw}" height="${H}" style="display:block">${g}${bs}${zero}<text x="${L}" y="${H - 5}">#${reqs[0].k}</text><text x="${dw - R}" y="${H - 5}" text-anchor="end">#${reqs[reqs.length - 1].k}</text></svg></div>`;
+  }
+
   const stacks = sg.map((s, i) => {
     if (!delta) return { pos: ORDER.map((k) => [k, s[k]]), neg: [] };
-    const prev = i ? sg[i - 1] : {};
-    const pos = [], neg = [];
-    ORDER.forEach((k) => { const dv = s[k] - (prev[k] || 0); (dv >= 0 ? pos : neg).push([k, Math.abs(dv)]); });
+    const prev = i ? sg[i - 1] : {}, pos = [], neg = [];
+    ORDER.forEach((k) => { const dv = (s[k] || 0) - (prev[k] || 0); (dv >= 0 ? pos : neg).push([k, Math.abs(dv)]); });
     return { pos, neg };
   });
-  const sum = (a) => a.reduce((x, y) => x + y[1], 0);
-  const ymax = Math.max(...stacks.map((s) => sum(s.pos))) * 1.06 || 1;
-  const ymin = delta ? Math.max(...stacks.map((s) => sum(s.neg)), 0) * 1.06 : 0;
-  const L = 44, R = 8, T = 8, Bt = 20, H = 210;
-  const W = S.ovw ? 720 : Math.max(720, pts.length * 9 + L + R);
-  const bw = (W - L - R) / pts.length;
+  const ssum = (a) => a.reduce((x, y) => x + y[1], 0);
+  const ymax = Math.max(...stacks.map((s) => ssum(s.pos))) * 1.06 || 1;
+  const ymin = delta ? Math.max(...stacks.map((s) => ssum(s.neg)), 0) * 1.06 : 0;
   const y = (v) => T + (1 - (v + ymin) / (ymax + ymin)) * (H - T - Bt);
   let g = '';
-  for (let i = 0; i <= 4; i++) { const v = -ymin + ((ymax + ymin) / 4) * i; g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text x="${L - 4}" y="${y(v) + 3}" text-anchor="end">${K(v)}</text>`; }
+  for (let i = 0; i <= 4; i++) {
+    const v = -ymin + ((ymax + ymin) / 4) * i;
+    g += `<line x1="${L}" x2="${W - R}" y1="${y(v)}" y2="${y(v)}" stroke="var(--line)"/><text class="yl" x="${L - 4}" y="${y(v) + 3}" text-anchor="end">${K(v)}</text>`;
+  }
+
   let bs = '';
-  stacks.forEach((s, i) => {
-    const x = L + i * bw, w = Math.max(S.ovw ? bw + .3 : bw - 1.5, 1);
-    let acc = 0;
-    s.pos.forEach(([k, v]) => { if (v <= 0) return; bs += `<rect x="${x.toFixed(1)}" y="${y(acc + v).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max((y(acc) - y(acc + v)), .4).toFixed(1)}" fill="var(--c-${k})"/>`; acc += v; });
-    acc = 0;
-    s.neg.forEach(([k, v]) => { if (v <= 0) return; bs += `<rect x="${x.toFixed(1)}" y="${y(-acc).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(y(-acc - v) - y(-acc), .4).toFixed(1)}" fill="var(--c-${k})" opacity=".55"/>`; acc += v; });
-  });
+  if (ovw && !delta) {
+    // continuous stacked polygon bands across the full panel width
+    const xs = pts.map((_, i) => L + (i + 0.5) * bw);
+    const bot = new Array(pts.length).fill(0);
+    ORDER.forEach((cat) => {
+      const top = bot.map((b, i) => b + (sg[i][cat] || 0));
+      if (!top.some((v, i) => v > bot[i])) return;
+      const dPath = xs.map((x, i) => `${i ? 'L' : 'M'}${x.toFixed(1)},${y(top[i]).toFixed(1)}`).join('')
+        + xs.slice().reverse().map((x, i) => `L${x.toFixed(1)},${y(bot[pts.length - 1 - i]).toFixed(1)}`).join('') + 'Z';
+      bs += `<path data-cat="${cat}" d="${dPath}" fill="var(--c-${cat})" opacity=".88"/>`;
+      for (let i = 0; i < bot.length; i++) bot[i] = top[i];
+    });
+  } else {
+    stacks.forEach((s, i) => {
+      const x = L + i * bw, w = Math.max(ovw ? bw + .3 : bw - 1.5, 1);
+      let acc = 0;
+      s.pos.forEach(([k, v]) => { if (v <= 0) return; bs += `<rect data-i="${i}" data-cat="${k}" x="${x.toFixed(1)}" y="${y(acc + v).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max((y(acc) - y(acc + v)), .4).toFixed(1)}" fill="var(--c-${k})"/>`; acc += v; });
+      acc = 0;
+      s.neg.forEach(([k, v]) => { if (v <= 0) return; bs += `<rect data-i="${i}" data-cat="${k}" x="${x.toFixed(1)}" y="${y(-acc).toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(y(-acc - v) - y(-acc), .4).toFixed(1)}" fill="var(--c-${k})" opacity=".55"/>`; acc += v; });
+    });
+  }
+
   const marks = (d.checkpointList || []).map((c) => {
     const i = pts.findIndex((p) => p[0] > c.k); if (i < 0) return '';
     const x = L + i * bw;
     return `<line x1="${x}" x2="${x}" y1="${T}" y2="${H - Bt}" stroke="var(--bad)" stroke-dasharray="3 3"/><text x="${x - 3}" y="${T + 8}" text-anchor="end" style="fill:var(--bad)">✂</text>`;
   }).join('');
-  const pin = S.pin != null && pts[S.pin] ? `<rect x="${L + S.pin * bw - 1}" y="${T}" width="${bw + 2}" height="${H - T - Bt}" fill="none" stroke="var(--fg)" stroke-width="1.2"/>` : '';
+
+  let curves = '';
+  if (S.curves) {
+    const mm = Math.max(...pts.map((p) => (p[9] || 0) + (p[10] || 0)), 1);
+    const yy = (v) => T + (1 - v / mm) * (H - T - Bt);
+    const line = (fn, col) => `<polyline fill="none" stroke="${col}" stroke-width="1.35" points="${pts.map((p, i) => `${(L + (i + .5) * bw).toFixed(1)},${yy(fn(p)).toFixed(1)}`).join(' ')}"/>`;
+    const ticks = [0, 0.25, 0.5, 0.75, 1].map((f) => `<text x="${W - R + 4}" y="${yy(mm * f) + 3}">${f ? D(mm * f) : '0'}</text>`).join('');
+    curves = line((p) => (p[9] || 0) + (p[10] || 0), '#ffd166') + line((p) => p[10] || 0, '#ffffff') + ticks;
+  }
+  let quart = '';
+  if (ovw) [0.25, 0.5, 0.75].forEach((f) => { const i = Math.floor(pts.length * f); quart += `<line x1="${L + i * bw}" x2="${L + i * bw}" y1="${H - Bt}" y2="${H - Bt + 4}" stroke="var(--mute)"/><text x="${L + i * bw}" y="${H - 4}" text-anchor="middle">#${pts[i][0]}</text>`; });
+  const pin = S.pin != null && pts[S.pin] ? `<rect x="${L + S.pin * bw - 1}" y="${T}" width="${Math.max(bw + 2, 3)}" height="${H - T - Bt}" fill="none" stroke="var(--fg)" stroke-width="1.2"/>` : '';
   const zero = delta ? `<line x1="${L}" x2="${W - R}" y1="${y(0)}" y2="${y(0)}" stroke="var(--fg)" opacity=".4"/>` : '';
-  trendCtx = { pts, sg, stacks, L, bw, W, B };
-  return `<div class="scroll" ${S.ovw ? '' : 'id="tscroll"'}><svg id="trend" viewBox="0 0 ${W} ${H}" ${S.ovw ? 'width="100%"' : `width="${W}"`} height="${H}" style="display:block">${g}${bs}${zero}${marks}${pin}
-    <text x="${L}" y="${H - 5}">#${pts[0][0]}</text><text x="${W - R}" y="${H - 5}" text-anchor="end">#${pts[pts.length - 1][0]}</text></svg></div>`;
+  trendCtx = { pts, sg, stacks, L, R, bw, W, ovw, T, Bt, H, delta };
+  return `<div class="scroll" ${ovw ? '' : 'id="tscroll"'}><svg id="trend" viewBox="0 0 ${W} ${H}" ${ovw ? 'width="100%"' : `width="${W}"`} height="${H}" style="display:block">${g}<g id="tbars">${bs}</g>${zero}${curves}${marks}${pin}${quart}
+    <text x="${L}" y="${H - 5}" ${ovw ? 'style="display:none"' : ''}>#${pts[0][0]}</text><text x="${W - R}" y="${H - 5}" text-anchor="end">#${pts[pts.length - 1][0]}</text></svg></div>`;
 }
-function wireTrend(prevLeft) {
+
+function adaptScale() {
+  const sc = $('#tscroll'), svg = $('#trend');
+  if (!S.adapt || !sc || !svg || !trendCtx || trendCtx.ovw || trendCtx.dna) return;
+  const { pts, stacks, L, bw, T, Bt, H } = trendCtx;
+  const lo = Math.max(0, Math.floor((sc.scrollLeft - L) / bw));
+  const hi = Math.min(pts.length - 1, Math.ceil((sc.scrollLeft + sc.clientWidth - L) / bw));
+  const ssum = (a) => a.reduce((x, y) => x + y[1], 0);
+  let ymax = 1, ymin = 0;
+  for (let i = lo; i <= hi; i++) {
+    ymax = Math.max(ymax, ssum(stacks[i].pos) * 1.08);
+    if (trendCtx.delta) ymin = Math.max(ymin, ssum(stacks[i].neg) * 1.08);
+  }
+  const baseMax = Math.max(...stacks.map((s) => ssum(s.pos))) * 1.06 || 1;
+  const baseMin = trendCtx.delta ? Math.max(...stacks.map((s) => ssum(s.neg)), 0) * 1.06 : 0;
+  const scale = (baseMax + baseMin) / Math.max(1, ymax + ymin);
+  const zeroY = T + (1 - baseMin / (baseMax + baseMin)) * (H - T - Bt);
+  const gb = svg.querySelector('#tbars');
+  if (gb) gb.setAttribute('transform', `translate(0,${(zeroY * (1 - scale)).toFixed(2)}) scale(1,${scale.toFixed(4)})`);
+  const yls = svg.querySelectorAll('text.yl');
+  yls.forEach((el, i) => { el.textContent = K(-ymin + ((ymax + ymin) / 4) * i); });
+}
+
+let trendRO = null;
+function wireTrend(prevScroll) {
+  if (trendRO) { trendRO.disconnect(); trendRO = null; }
   const svg = $('#trend'); if (!svg || !trendCtx) return;
-  const sc = $('#tscroll'); if (sc) sc.scrollLeft = prevLeft != null ? prevLeft : sc.scrollWidth;
-  const tip = $('#tip');
+  const sc = $('#tscroll');
+  if (sc) {
+    let syncing = false;
+    const snap = () => {
+      if (!sc.isConnected || !sc.clientWidth) return;
+      syncing = true;
+      if (S.tPinnedRight || !prevScroll || prevScroll.atEnd) sc.scrollLeft = sc.scrollWidth;
+      else sc.scrollLeft = prevScroll.left;
+      if (S.adapt) adaptScale();
+      requestAnimationFrame(() => requestAnimationFrame(() => { syncing = false; }));
+    };
+    snap();
+    requestAnimationFrame(snap);
+    if (typeof ResizeObserver !== 'undefined') {
+      trendRO = new ResizeObserver(() => { if (S.tPinnedRight) snap(); else if (S.adapt) adaptScale(); });
+      trendRO.observe(sc);
+    }
+    sc.addEventListener('scroll', () => {
+      if (!syncing && sc.clientWidth && sc.scrollWidth > sc.clientWidth) {
+        S.tPinnedRight = sc.scrollLeft + sc.clientWidth >= sc.scrollWidth - 8;
+      }
+      if (S.adapt) adaptScale();
+    });
+  }
+  const tip = $('#tip'), hl = $('#hlstyle');
   const idx = (e) => { const r = svg.getBoundingClientRect(); const fx = ((e.clientX - r.left) / r.width) * trendCtx.W; return Math.min(trendCtx.pts.length - 1, Math.max(0, Math.floor((fx - trendCtx.L) / trendCtx.bw))); };
   svg.addEventListener('mousemove', (e) => {
-    const i = idx(e), p = trendCtx.pts[i], s = trendCtx.sg[i];
+    if (trendCtx.dna) {
+      const ds = e.target.dataset;
+      if (!ds?.step) { tip.style.display = 'none'; return; }
+      tip.style.display = 'block'; tip.style.left = Math.min(e.clientX + 12, innerWidth - 260) + 'px'; tip.style.top = e.clientY + 12 + 'px';
+      tip.innerHTML = `#${ds.rk} · ${esc(ds.lbl)} · ≈${K(Number(ds.tok))}`;
+      return;
+    }
+    const i = idx(e), p = trendCtx.pts[i], s = trendCtx.sg[i], cat = e.target.dataset && e.target.dataset.cat;
+    hl.textContent = trendCtx.ovw && cat ? `#trend path[data-cat]:not([data-cat="${cat}"]){opacity:.2}` : '';
     const topc = ORDER.filter((k) => s[k] > 0).sort((a, b) => s[b] - s[a]).slice(0, 3).map((k) => `${cLabel(k)} ${K(s[k])}`).join(' · ');
     tip.style.display = 'block'; tip.style.left = Math.min(e.clientX + 12, innerWidth - 260) + 'px'; tip.style.top = e.clientY + 12 + 'px';
-    tip.innerHTML = `#${p[0]} · ${K(p[2])} ctx · ${t('cacheRead')} ${K(p[2] - p[3])} · ${t('fresh')} ${K(p[3])}<br>${esc(topc)}`;
+    tip.innerHTML = `#${p[0]} · ${K(p[2])} ctx · ${t('cacheRead')} ${K(p[2] - p[3])} · ${t('fresh')} ${K(p[3])}${p[9] || p[10] ? `<br>${t('modelMs')} ${D(p[9] || 0)} · ${t('toolMs')} ${D(p[10] || 0)}` : ''}<br>${esc(topc)}${cat && trendCtx.ovw ? `<br><b>${cLabel(cat)}</b>` : ''}`;
+    if (S.pin == null && S.hoverIdx !== i) { S.hoverIdx = i; const br = $('#stepbrief'); if (br) br.innerHTML = briefHtml(S.d, i); }
   });
-  svg.addEventListener('mouseleave', () => { tip.style.display = 'none'; });
-  svg.addEventListener('click', (e) => { S.pin = idx(e); render(true); });
+  svg.addEventListener('mouseleave', () => {
+    tip.style.display = 'none'; hl.textContent = '';
+    if (S.pin == null && S.hoverIdx != null) { S.hoverIdx = null; const br = $('#stepbrief'); if (br) br.innerHTML = briefHtml(S.d, null); }
+  });
+  svg.addEventListener('click', (e) => {
+    if (trendCtx.dna) {
+      const ds = e.target.dataset;
+      if (ds?.step) {
+        const stp = Number(ds.step);
+        if (S.dnaItem === stp) { S.dnaItem = null; S.dnaMeta = null; }
+        else { S.dnaItem = stp; S.dnaMeta = { step: stp, rk: Number(ds.rk), cat: ds.cat, lbl: ds.lbl, tok: Number(ds.tok) }; }
+        render(true);
+      }
+      return;
+    }
+    const i = idx(e), cat = e.target.dataset && e.target.dataset.cat;
+    S.pin = S.pin === i && !trendCtx.ovw ? null : i;
+    if (trendCtx.ovw && cat) { S.openCat = cat; S.view = 'browser'; S.browseK = trendCtx.pts[i][0]; S.browse = null; }
+    render(true);
+  });
 }
-function pinnedPanel(d) {
-  if (S.pin == null || !trendCtx || !trendCtx.pts[S.pin]) return '';
-  const i = S.pin, p = trendCtx.pts[i], s = trendCtx.sg[i], prev = i ? trendCtx.sg[i - 1] : {};
+
+function briefHtml(d, idxOpt) {
+  if (!trendCtx || !trendCtx.pts.length) return '';
+  const i = idxOpt != null ? idxOpt : (S.pin != null ? S.pin : trendCtx.pts.length - 1);
+  const p = trendCtx.pts[i]; if (!p) return '';
+  const s = trendCtx.sg[i], prev = i ? trendCtx.sg[i - 1] : {};
   const turn = d.turnList.find((x) => x.n === p[5]);
-  const inn = ORDER.map((k) => [k, s[k] - (prev[k] || 0)]).filter(([, v]) => v > 50).sort((a, b) => b[1] - a[1]).slice(0, 4);
-  return `<div class="card pin"><h2>${t('pinned')} #${p[0]} <span class="sub">${when(p[1])} · ${t('turns').toLowerCase()} ${p[5]}</span>
-    <button class="ghost" data-act="tobrowse" data-v="${p[0]}">${t('browse')}</button></h2>
-    <dl><dt>${t('actual')}</dt><dd>${t('prompt')} ${K(p[2])} (${t('fresh').toLowerCase()} ${K(p[3])} + ${t('cacheRead').toLowerCase()} ${K(p[2] - p[3])}) · ${t('out').toLowerCase()} ${K(p[4])}</dd>
-    <dt>${t('user_')}</dt><dd>${esc(turn ? turn.text : '—')}</dd>
-    <dt>${t('inn')}</dt><dd>${inn.length ? inn.map(([k, v]) => `<span class="chip"><span class="dot" style="background:var(--c-${k})"></span>${cLabel(k)} ${v > 0 ? '+' : ''}${K(v)}</span>`).join(' ') : '—'}</dd>
-    <dt>${t('resp')}</dt><dd>${p[7] ? `<span class="mono">${esc(p[7])}</span><br>` : ''}${esc(p[8] || '')}</dd></dl></div>`;
+  const inn = ORDER.map((k) => [k, (s[k] || 0) - (prev[k] || 0)]).filter(([, v]) => v > 50).sort((a, b) => b[1] - a[1]).slice(0, 4);
+  const go = `data-act="tobrowse" data-v="${p[0]}"`;
+  const tag = S.pin != null && i === S.pin ? `${t('pinned')} #${p[0]}` : `${t('briefTitle')} #${p[0]}`;
+  return `<div class="card ${S.pin != null && i === S.pin ? 'pin' : ''}"><h2>${tag} <span class="sub">${when(p[1])} · ${t('turns').toLowerCase()} ${p[5]}</span>
+    <span style="display:flex;gap:6px">${S.pin != null ? `<button class="ghost" data-act="unpin">✕</button>` : ''}<button class="ghost" ${go}>${t('browse')}</button></span></h2>
+    <dl style="display:grid;grid-template-columns:64px 1fr;gap:3px 10px;margin:4px 0 0">
+    <dt class="mute">${t('actual')}</dt><dd style="margin:0">${t('prompt')} ${K(p[2])} (${t('fresh').toLowerCase()} ${K(p[3])} + ${t('cacheRead').toLowerCase()} ${K(p[2] - p[3])}) · ${t('out').toLowerCase()} ${K(p[4])}${p[9] || p[10] ? ` · ${t('modelMs')} ${D(p[9] || 0)} · ${t('toolMs')} ${D(p[10] || 0)}` : ''}</dd>
+    <dt class="mute">${t('user_')}</dt><dd class="click" style="margin:0" data-act="tobrowsecat" data-v="user|${p[0]}">${esc(turn ? turn.text : '—')}</dd>
+    <dt class="mute">${t('inn')}</dt><dd class="click" style="margin:0" ${go}>${inn.length ? inn.map(([k, v]) => `<span class="chip"><span class="dot" style="background:var(--c-${k})"></span>${cLabel(k)} ${v > 0 ? '+' : ''}${K(v)}</span>`).join(' ') : '—'}</dd>
+    <dt class="mute">${t('resp')}</dt><dd class="click" style="margin:0" data-act="tobrowsecat" data-v="toolCalls|${p[0]}">${p[7] ? `<span class="mono">${esc(p[7])}</span> ` : ''}${esc(p[8] || '')}</dd></dl></div>`;
 }
 function nowCard(d) {
-  const W = S.st.contextWindow, B = baseOf(d), now = d.lastCtx;
+  const W = convWin(d), winSrc = d?.pricing?.window ? t('winModel') : t('winDef'), B = baseOf(d), now = d.lastCtx;
   let cn = d.compNow;
-  if (SRV.reduce((a, k) => a + (cn[k] || 0), 0) < 1 && d.series.length) { // log ends right at a checkpoint: use the last request's view
+  if (SRV.reduce((a, k) => a + (cn[k] || 0), 0) < 1 && d.series.length) {
     const lp = d.series[d.series.length - 1]; cn = Object.fromEntries(SRV.map((k, i) => [k, lp[6][i]]));
   }
   const sumv = tot(cn, SRV), R = Math.max(0, now - B), sc = R / sumv;
   const calib = { base: Math.min(B, now) }; SRV.forEach((k) => { calib[k] = (cn[k] || 0) * sc; });
-  const keys = ORDER;
-  const segsH = keys.filter((k) => calib[k] > 0).map((k) => `<i style="width:${(calib[k] / W) * 100}%;background:var(--c-${k})" title="${cLabel(k)} ${K(calib[k])}"></i>`).join('')
-    + `<i class="free" style="flex:1" title="${t('free')} ${K(Math.max(0, W - now))}"></i>`;
-  return `<div class="card"><h2>${t('nowCtx')}<span class="sub">${K(now)} / ${K(W)} · ${P(now / W)} ${t('ofWindow')} · ${t('nowNote')}</span></h2>
-    <div class="stack" style="height:16px">${segsH}</div>${legend(calib, keys)}</div>`;
+  const ca = compactAt(d), outRes = Math.min(32000, Math.round(W * 0.16)), limit = ca ? Math.max(ca.v, now) : Math.max(now, W - outRes);
+  const segsH = ORDER.filter((k) => calib[k] > 0).map((k) => `<i style="width:${(calib[k] / W) * 100}%;background:var(--c-${k})" title="${cLabel(k)} ${K(calib[k])}"></i>`).join('')
+    + `<i class="free" style="width:${(Math.max(0, limit - now) / W) * 100}%" title="${t('free')} ${K(Math.max(0, limit - now))}"></i>`
+    + `<i class="past" style="width:${(Math.max(0, W - outRes - limit) / W) * 100}%" title="${t('compactAt')} ${K(limit)}"></i>`
+    + `<i class="past" style="flex:1;opacity:.6" title="${t('outRes')} ${K(outRes)}"></i>`
+    + (ca ? `<span class="mark" style="left:${(limit / W) * 100}%" title="${t('compactAt')} ${K(ca.v)}"></span>` : '');
+  const note = ca ? `${t('compactAt')} ${K(ca.v)} (${t('inferred')} ${ca.n} ${t('ckpt').toLowerCase()}) · ${P(now / limit)} · ${K(Math.max(0, limit - now))} ${t('untilCompact')}` : `${P(now / W)} ${t('ofWindow')} · ${t('outRes')} ${K(outRes)}`;
+  return `<div class="card"><h2>${t('nowCtx')}<span class="sub">${K(now)} / ${K(W)} (${winSrc}) · ${note}</span></h2>
+    <div class="stack" style="height:16px">${segsH}</div>${legend(calib, ORDER)}<div class="mute" style="margin-top:4px">${t('nowNote')}</div></div>`;
 }
 function viewOverview(d) {
-  const hasT = d.hasTokens, act = d.timing.model + d.timing.tool;
+  const hasT = d.hasTokens, act = d.timing.model + d.timing.tool + (d.timing.overhead || 0), W = convWin(d);
   const parts = [];
-  parts.push(`<div class="meta"><b style="color:var(--fg)">${esc(d.title)}</b><span>${when(d.first)} → ${when(d.last)}</span>${d.project ? `<span class="chip">${esc(d.project)}</span>` : ''}${d.children ? `<span class="chip">⛓ ${d.children}</span>` : ''}</div>`);
+  const fsum = (key) => d.files.reduce((a, f) => a + (f[key] > 0 ? 1 : 0), 0);
+  const chip = (label, n, act_, v = '') => `<span class="chip link" data-act="${act_}" data-v="${v}">${label} ${n}</span>`;
+  const priceTip = d.pricing ? `${d.pricing.source} ($${d.pricing.input}/$${d.pricing.cache}/$${d.pricing.output} per 1M)` : '';
+  parts.push(`<div class="meta"><b style="color:var(--fg)">${esc(d.title)}</b><span>${when(d.first)} → ${when(d.last)}</span>${d.model ? `<span class="chip">${esc(d.model)}</span>` : ''}${d.project ? `<span class="chip">${esc(d.project)}</span>` : ''}</div>`);
   parts.push(`<div class="kpis">
     ${kpi(t('turns'), d.turns, `${d.steps} ${t('steps').toLowerCase()}`)}
     ${kpi(t('tools'), d.toolCalls, `${d.errors} ${t('errors').toLowerCase()}`)}
-    ${hasT ? kpi(t('ctxNow'), K(d.lastCtx), `${t('peak')} ${K(d.peak)} · ${P(d.lastCtx / S.st.contextWindow)}`) : ''}
+    ${hasT ? kpi(t('ctxNow'), K(d.lastCtx), `${t('peak')} ${K(d.peak)} · ${P(d.lastCtx / W)}`) : ''}
     ${hasT ? kpi(t('req'), d.requests, `${t('cache')} ${P(d.cacheHit)}`) : ''}
     ${hasT ? kpi(t('fresh'), K(d.tokens.input), `${t('cacheRead')} ${K(d.tokens.cache)} · ${t('out')} ${K(d.tokens.output)}`) : ''}
-    ${act ? kpi(t('activeTime'), D(act), `${t('modelTime')} ${D(d.timing.model)} · ${t('toolTime')} ${D(d.timing.tool)}`) : ''}
     ${kpi(t('ckpt'), d.checkpoints, '', d.checkpoints ? 'warn' : '')}
-    ${d.cost ? kpi(t('cost'), money(d.cost), t('costTip')) : ''}</div>`);
+    ${d.cost ? kpi(t('cost'), M(d.cost), d.subCost ? `${t('subCost')} ${M(d.subCost)}` : t('costTip'), '', priceTip) : ''}
+    ${d.children ? kpi(t('agentNet'), d.children + 1, t('fleet'), '', '', 'gofleet') : ''}</div>`);
+  parts.push(`<div class="meta" style="gap:6px">${chip(t('userIn'), d.turns, 'tobrowsecat', 'user')}${chip(t('answers_'), d.requests, 'tobrowsecat', 'answer')}${chip(t('skillsT'), d.skills.reduce((a, x) => a + x.count, 0), 'tobrowsecat', 'skills')}${chip(t('evTitle'), d.events.length, 'goevents', '')}${chip(t('fRead'), fsum('r'), 'gofiles', 'r')}${chip(t('fWrite'), fsum('w'), 'gofiles', 'w')}${chip(t('fSearch'), fsum('s'), 'gofiles', 's')}${chip(t('fImg'), fsum('img'), 'gofiles', 'i')}</div>`);
+  if (act) {
+    const m = d.timing.model, tl = d.timing.tool, o = d.timing.overhead || 0;
+    parts.push(`<div class="card"><h2>${t('timing')}<span class="sub">${t('activeTime')} ${D(act)}${d.timing.tps ? ` · ${d.timing.tps} tok/s` : ''}</span></h2>
+      <div class="bar2"><i style="width:${(m / act) * 100}%;background:#e0a43a" title="${t('modelTime')}"></i><i style="width:${(tl / act) * 100}%;background:var(--c-files)" title="${t('toolTime')}"></i><i style="width:${(o / act) * 100}%;background:var(--c-other)" title="${t('overheadTime')}"></i></div>
+      <div class="meta" style="justify-content:space-between;margin-bottom:4px"><span>0</span><span>${D(act * .25)}</span><span>${D(act * .5)}</span><span>${D(act * .75)}</span><span>${D(act)}</span></div>
+      <div class="legend"><div><span class="dot" style="background:#e0a43a"></span><em>${t('modelTime')}${d.timing.modelCalls ? ` (${d.timing.modelCalls}×)` : ''}</em><b>${D(m)} · ${P(m / act)}</b></div><div><span class="dot" style="background:var(--c-files)"></span><em>${t('toolTime')}${d.timing.toolRuns ? ` (${d.timing.toolRuns}×${d.timing.toolSum > tl * 1.05 ? ` · ${t('sumCalls').replace('{d}', D(d.timing.toolSum))}` : ''})` : ''}</em><b>${D(tl)} · ${P(tl / act)}</b></div><div><span class="dot" style="background:var(--c-other)"></span><em>${t('overheadTime')}</em><b>${D(o)} · ${P(o / act)}</b></div></div></div>`);
+  }
   if (hasT) {
     parts.push(nowCard(d));
-    parts.push(`<div class="card"><h2>${t('trend')}<span style="display:flex;gap:6px;flex-wrap:wrap">
+    const n = trendPoints(d).length, ovw = ovwOn(n);
+    parts.push(`<div class="card"><h2>${t('trend')}<span style="display:flex;gap:5px;flex-wrap:wrap">
       ${seg([['step', t('gStep')], ['turn', t('gTurn')]], S.gran, 'gran')}${seg([['total', t('mTotal')], ['delta', t('mDelta')]], S.mode, 'mode')}
-      <button class="ghost ${S.ovw ? 'on' : ''}" data-act="ovw">${t('ovw')}</button></span></h2>
-      ${trendChart(d)}<div class="mute" style="margin-top:4px">${t('trendNote')}</div></div>`);
-    parts.push(pinnedPanel(d));
+      <button class="ghost ${S.curves ? 'on' : ''}" data-act="curves">${t('curves')}</button>
+      <button class="ghost ${S.adapt ? 'on' : ''}" data-act="adapt">${t('adapt')}</button>
+      <button class="ghost ${ovw ? 'on' : ''}" data-act="ovw">${t('ovw')}</button>
+      <button class="ghost ${S.trendDna ? 'on' : ''}" data-act="tdna">${t('dnaMode')}</button></span></h2>
+      ${trendChart(d)}<div class="mute" style="margin-top:4px">${S.trendDna ? t('trendNoteDna') : ovw ? t('trendNoteOvw') : t('trendNote')}</div>${S.trendDna && S.dnaMeta ? `<div class="meta" style="margin-top:6px;gap:8px"><span>${t('dnaSel')}: <b>#${S.dnaMeta.step} ${esc(S.dnaMeta.lbl)}</b> (≈${K(S.dnaMeta.tok)})</span><button class="ghost" data-act="revstep" data-v="${S.dnaMeta.rk}|${S.dnaMeta.step}|${S.dnaMeta.cat}">${t('locateBr')}</button><button class="ghost" data-act="dnaclr">✕</button></div>` : ''}</div>`);
+    parts.push(`<div id="stepbrief"></div>`);
   } else parts.push(`<div class="card empty">${t('notok')}</div>`);
-  parts.push(`<div class="card"><h2>${t('comp')}<span class="sub">${t('compNote')}</span></h2>${stackBar(d.comp)}${legend(d.comp)}</div>`);
-  parts.push(`<div class="cols"><div class="card"><h2>${t('toolsT')}</h2>${bars(d.tools.slice(0, 10))}</div>
-    <div class="card"><h2>${t('skills')}</h2>${bars(d.skills)}</div></div>`);
+  // Logical Token Stats (merges tool calls + tool results vs separate breakdown)
+  const tokStats = {
+    system: d.baseline + (d.comp.system || 0),
+    user: d.comp.user || 0,
+    skills: d.comp.skills || 0,
+    toolAll: (d.comp.toolCalls || 0) + (d.comp.commands || 0) + (d.comp.files || 0) + (d.comp.edits || 0) + (d.comp.search || 0) + (d.comp.mcp || 0) + (d.comp.other || 0),
+    reasoning: d.comp.reasoning || 0,
+    answer: d.comp.answer || 0,
+  };
+  parts.push(`<div class="cols">
+    <div class="card"><h2>${t('statsTok')}<span class="sub">${hasT ? `${t('cache')} ${P(d.cacheHit)}` : ''}</span></h2>${stackBar(tokStats, 0, ['toolAll', 'system', 'reasoning', 'skills', 'answer', 'user'])}${legend(tokStats, ['toolAll', 'system', 'reasoning', 'skills', 'answer', 'user'])}</div>
+    <div class="card"><h2>${t('comp')}<span class="sub">${t('compNote')}</span></h2>${stackBar(d.comp)}${legend(d.comp)}</div></div>`);
+  const tList = sortTools(d.tools.slice(0, 12), S.toolSort).map((x) => ({ ...x, count: S.toolSort === 'size' ? x.tok : x.count }));
+  parts.push(`<div class="cols"><div class="card"><h2>${t('toolsT')}${seg([['count', t('byCount')], ['size', t('bySize')], ['name', t('byName')]], S.toolSort, 'tsort')}</h2>${bars(tList, { act: 'gotool' })}</div>
+    <div class="card"><h2>${t('skillsT')}</h2>${bars(d.skills, { extra: (x) => (x.source ? `<span class="chip">${x.source}</span>` : '') + (x.path ? `<span class="chip link" data-act="cppath" data-v="${esc(x.path)}" title="${esc(x.path)}">${t('copyT')}</span>` : '') })}</div></div>`);
   if (d.turnList.length && hasT) {
     const rows = d.turnList.filter((x) => x.req);
     if (S.turnOrder === 'heavy') rows.sort((a, b) => (b.peak - b.start) - (a.peak - a.start));
@@ -412,130 +840,299 @@ function viewOverview(d) {
       ${rows.slice(0, 25).map((x) => `<tr><td class="n">${x.n}</td><td>${esc(x.text)}</td><td class="n">${K(x.start)}</td><td class="n">${K(x.peak)}</td>
         <td class="n">${x.peak - x.start >= 0 ? '+' : ''}${K(x.peak - x.start)}</td><td class="n">${x.req}</td><td class="n">${x.tools}</td></tr>`).join('')}</table></div></div>`);
   }
+  if (S.pinfo) {
+    parts.push(`<div class="card"><h2>${t('pluginInfo')}</h2><div class="meta"><b>${esc(S.pinfo.displayName || S.pinfo.name)}</b><span>v${esc(S.pinfo.version)}</span>
+      ${S.pinfo.repository ? `<a class="chip link" href="${esc(S.pinfo.repository)}" target="_blank" rel="noreferrer">GitHub ↗</a>` : ''}
+      <button class="ghost" data-act="tab" data-v="settings">${t('openSet')}</button></div></div>`);
+  }
   return parts.join('');
 }
+function sortTools(arr, by) {
+  const a = arr.slice();
+  if (by === 'size') a.sort((x, y) => (y.tok || 0) - (x.tok || 0));
+  else if (by === 'name') a.sort((x, y) => x.name.localeCompare(y.name));
+  else a.sort((x, y) => y.count - x.count);
+  return a;
+}
 
-// ------------------------------------------------------------ CONTEXT: browser
+// ------------------------------------------------------------ CONTEXT: browser (treemap + DNA + diffs + JSON + attachments)
+function diffBadge(cat) {
+  if (!S.browse) return '';
+  const base = (S.cmp === 'turn' ? S.browse.prev.turn : S.browse.prev.step) || {};
+  const cur = S.browse.items.filter((i) => i.cat === cat);
+  const b = base[cat] || { n: 0, t: 0 };
+  const dn = cur.length - b.n, dt = cur.reduce((a, i) => a + i.tok, 0) - b.t;
+  if (!dn && Math.abs(dt) < 50) return '';
+  return `<span class="diff ${dt < 0 ? 'neg' : 'pos'}">${dn > 0 ? '+' : ''}${dn} · ${dt > 0 ? '+' : ''}${K(dt)}</span>`;
+}
+function treemapSvg(items) {
+  if (!items.length) return '';
+  const by = {};
+  items.forEach((it) => { const key = `${it.cat}|${it.call || it.cat}`; const e = (by[key] ||= { cat: it.cat, label: it.call || cLabel(it.cat), tok: 0, step: it.step, n: 0 }); e.tok += it.tok; e.n++; if (it.tok > (e.maxTok || 0)) { e.maxTok = it.tok; e.step = it.step; } });
+  const list = Object.values(by).filter((x) => x.tok > 0).sort((a, b) => b.tok - a.tok);
+  const total = list.reduce((a, b) => a + b.tok, 0) || 1;
+  const W = 700, H = 130, rects = [];
+  function split(arr, x, y, w, h) {
+    if (!arr.length || w < 1 || h < 1) return;
+    if (arr.length === 1) { rects.push({ ...arr[0], x, y, w, h }); return; }
+    const tot_ = arr.reduce((a, b) => a + b.tok, 0) || 1;
+    let acc = 0, mid = 1;
+    for (let i = 0; i < arr.length - 1; i++) { acc += arr[i].tok; mid = i + 1; if (acc >= tot_ * 0.45) break; }
+    const f = acc / tot_;
+    if (w >= h) { split(arr.slice(0, mid), x, y, w * f, h); split(arr.slice(mid), x + w * f, y, w * (1 - f), h); }
+    else { split(arr.slice(0, mid), x, y, w, h * f); split(arr.slice(mid), x, y + h * f, w, h * (1 - f)); }
+  }
+  split(list.slice(0, 24), 0, 0, W, H);
+  return `<svg viewBox="0 0 ${W} ${H}" width="100%" style="margin-bottom:8px;border-radius:6px;overflow:hidden">${rects.map((r) =>
+    `<g data-act="mapjump" data-v="${r.cat}|${r.step}" style="cursor:pointer"><rect x="${r.x + 1}" y="${r.y + 1}" width="${Math.max(1, r.w - 2)}" height="${Math.max(1, r.h - 2)}" rx="3" fill="var(--c-${r.cat})" opacity=".85"><title>${esc(r.label)} · ${r.n} ${t('items')} · ≈${K(r.tok)} (${P(r.tok / total)})</title></rect>
+    ${r.w > 54 && r.h > 22 ? `<text x="${r.x + 6}" y="${r.y + 14}" style="fill:#fff;font-weight:600">${esc(r.label.slice(0, Math.floor(r.w / 7)))}</text><text x="${r.x + 6}" y="${r.y + 26}" style="fill:#fff;opacity:.85">${K(r.tok)}</text>` : ''}</g>`).join('')}</svg>`;
+}
+function itemRow(it, pos) {
+  const key = 'b' + it.step + '_' + it.pos, sv = S.stepView[key];
+  const extra = (it.call ? `<div class="meta" style="margin-bottom:3px"><span class="chip">${esc(it.call)}</span>${it.provider ? `<span class="chip">${esc(it.provider)}</span>` : ''}<span class="chip ${it.ok === false ? 'fail' : 'ok'}">${it.ok === false ? t('errT') : t('okT')}</span><span>${it.lines || 0} ${t('lines_')}</span></div>` : '')
+    + (it.args ? `<details><summary class="mute">${t('argsT')}</summary><pre>${esc(it.args)}</pre></details>` : '')
+    + attachCards(it.media);
+  return `<div class="item ${S.hlStep === it.step ? 'hl' : ''}" data-act="step" data-v="${key}|${it.step}" style="${pos != null ? 'grid-template-columns:44px 44px minmax(0,1fr) 54px' : ''}">${pos != null ? `<span class="mute">#${pos}</span>` : ''}<span class="mute">${pos != null ? `<span class="dot" style="background:var(--c-${it.cat})"></span>` : '#' + it.step}</span><span title="${esc(it.title)}">${it.media ? '🖼 ' : ''}${esc(it.title)}</span><b style="text-align:right;font-weight:500">${K(it.tok)}</b></div>${sv ? stepBlock(key, sv, extra, it.cat) : (it.media ? `<div class="detail">${attachCards(it.media)}</div>` : '')}`;
+}
 function viewBrowser(d) {
   const ks = d.series.map((p) => p[0]);
   if (!ks.length) return `<div class="card empty">${t('notok')}</div>`;
-  const k = S.browseK ?? ks[ks.length - 1];
-  const B = d.baseline ?? baseOf(d);
+  const k = S.browseK || 0, B = baseOf(d);
   let body = `<div class="empty">…</div>`;
-  if (S.browse && S.browse.k === k) {
-    const items = S.browse.items, by = {};
-    items.forEach((it) => (by[it.cat] ||= []).push(it));
-    const cats = ORDER.filter((c) => by[c]).map((c) => [c, by[c].reduce((a, b) => a + b.tok, 0)]).sort((a, b) => b[1] - a[1]);
-    const total = cats.reduce((a, b) => a + b[1], 0) || 1;
-    body = `<div class="row"><span><span class="dot" style="background:var(--c-base)"></span> ${t('base')}</span><b>≈ ${K(B)}</b></div>` + cats.map(([c, sum]) => {
-      const list = by[c].sort((a, b) => b.tok - a.tok);
-      return `<details ${S.openCat === c ? 'open' : ''} data-cat="${c}"><summary><span class="dot" style="background:var(--c-${c})"></span>${cLabel(c)} <span class="mute">${list.length}</span><b>${K(sum)} · ${P(sum / total)}</b></summary>
-        ${list.slice(0, 120).map((it) => `<div class="item" data-act="step" data-v="${it.step}"><span class="mute">#${it.step}</span><span title="${esc(it.title)}">${esc(it.title)}</span><b style="text-align:right;font-weight:500">${K(it.tok)}</b></div>${S.stepView[it.step] ? `<pre>${esc(stepText(S.stepView[it.step]))}</pre>` : ''}`).join('')}
-        ${list.length > 120 ? `<div class="mute" style="padding-left:16px">… ${list.length - 120}</div>` : ''}</details>`;
-    }).join('');
+  if (S.browse && S.browse.k === k && S.browse.id === d.id) {
+    const q = S.bq.toLowerCase();
+    let items = S.browse.items.filter((i) => !q || i.title.toLowerCase().includes(q) || (i.provider || '').toLowerCase().includes(q));
+    if (S.bdelta && k > 1) {
+      const cutSeq = S.cmp === 'turn' ? (S.browse.prev.turnSeq || 0) : (S.browse.prev.stepSeq || 0);
+      items = items.filter((i) => i.seq > cutSeq);
+    }
+    const total = items.reduce((a, b) => a + b.tok, 0) || 1;
+    const mapHtml = S.btreemap ? treemapSvg(items) : '';
+    if (S.bmode === 'dna') {
+      body = mapHtml + `<div class="mute" style="margin-bottom:4px">${t('dnaNote')}</div><div class="stack" style="height:18px;margin-bottom:8px">${items.map((it) => `<i style="width:${(it.tok / total) * 100}%;min-width:1px;background:var(--c-${it.cat})" title="#${it.pos} ${cLabel(it.cat)} ${K(it.tok)} — ${esc(it.title)}"></i>`).join('')}</div>`
+        + [...items].reverse().slice(0, 300).map((it) => itemRow(it, it.pos)).join('')
+        + `<div class="row"><span><span class="dot" style="background:var(--c-base)"></span> ${t('base')}</span><b>≈ ${K(B)}</b></div>`;
+    } else {
+      const by = {};
+      items.forEach((it) => (by[it.cat] ||= []).push(it));
+      const cats = ORDER.filter((c) => by[c]).map((c) => [c, by[c].reduce((a, b) => a + b.tok, 0)]).sort((a, b) => b[1] - a[1]);
+      body = mapHtml + `<div class="row"><span><span class="dot" style="background:var(--c-base)"></span> ${t('base')}</span><b>≈ ${K(B)}</b></div>` + cats.map(([c, sm]) => {
+        let list = by[c].slice();
+        if (S.bsort === 'size') list.sort((a, b) => b.tok - a.tok);
+        return `<details ${S.openCat === c ? 'open' : ''} data-cat="${c}"><summary><span class="dot" style="background:var(--c-${c})"></span>${cLabel(c)} <span class="mute">${list.length}</span> ${diffBadge(c)}<b>${K(sm)} · ${P(sm / total)}</b></summary>
+          ${(() => { const sub = list.slice(0, 120); if (S.hlStep && !sub.some((x) => x.step === S.hlStep)) { const m = list.find((x) => x.step === S.hlStep); if (m) sub.unshift(m); } return sub.map((it) => itemRow(it)).join(''); })()}
+          ${list.length > 120 ? `<div class="mute" style="padding-left:16px">… ${list.length - 120}</div>` : ''}</details>`;
+      }).join('');
+    }
   }
   const idx = ks.indexOf(k);
-  return `<div class="card"><h2>${t('brReq')} #${k}<span style="display:flex;gap:6px;align-items:center">
-    <button class="ghost" data-act="bprev" ${idx <= 0 ? 'disabled' : ''}>‹</button>
-    <select id="bsel">${ks.filter((_, i) => i % Math.max(1, Math.ceil(ks.length / 300)) === 0 || ks[i] === k).map((x) => `<option ${x === k ? 'selected' : ''} value="${x}">#${x}</option>`).join('')}</select>
-    <button class="ghost" data-act="bnext" ${idx >= ks.length - 1 ? 'disabled' : ''}>›</button></span></h2>
-    <div class="mute" style="margin-bottom:6px">${t('brNote')}</div>${body}</div>`;
+  const stepOpts = d.series.filter((p) => !S.pickQ || `t${p[5]} s${p[0]} #${p[0]} ${p[7]}`.toLowerCase().includes(S.pickQ.toLowerCase()));
+  return `<div class="card"><h2>${t('brReq')} ${k ? '#' + k : t('live')}<span style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
+    <button class="ghost" data-act="bprev" ${k && idx <= 0 ? 'disabled' : ''}>‹</button>
+    <span class="pickpop"><button class="ghost" data-act="picktog">${k ? `#${k} (T${S.browse?.reqMeta?.turn ?? ''})` : t('live')} ▾</button>
+    ${S.pickOpen ? `<div class="pickmenu"><input id="pq" placeholder="${t('pickStep')}" value="${esc(S.pickQ)}" style="width:100%;margin-bottom:4px">
+      <div class="pickopt ${k === 0 ? 'on' : ''}" data-act="tobrowse" data-v="0">${t('live')}</div>
+      ${stepOpts.slice(-120).reverse().map((p) => `<div class="pickopt ${p[0] === k ? 'on' : ''}" data-act="tobrowse" data-v="${p[0]}">T${p[5]} · #${p[0]} · ${K(p[2])}</div>`).join('')}</div>` : ''}</span>
+    <button class="ghost" data-act="bnext" ${!k ? 'disabled' : ''}>›</button></span></h2>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-bottom:6px;align-items:center">
+      ${seg([['cat', t('catMode')], ['dna', t('dna')]], S.bmode, 'bmode')}
+      ${S.bmode === 'cat' ? seg([['size', t('bySize')], ['order', t('byOrder')]], S.bsort, 'bsort') + seg([['step', t('vsStep')], ['turn', t('vsTurn')]], S.cmp, 'cmp') : ''}
+      <button class="ghost ${S.btreemap ? 'on' : ''}" data-act="bmap">${t('treemap')}</button>
+      <button class="ghost ${S.bdelta ? 'on' : ''}" data-act="bdel" ${!k ? 'disabled' : ''}>${t('deltaOnly')}</button>
+      <input id="bq" placeholder="${t('filterItems')}" value="${esc(S.bq)}" style="flex:1;min-width:110px"></div>
+    <div class="mute" style="margin-bottom:6px">${t('brNote')}${S.browse ? ` · ${S.browse.items.length} ${t('items')}` : ''}</div>${body}</div>`;
 }
-const stepText = (s) => [s.thinking && `[reasoning]\n${s.thinking}`, s.content, s.tool_calls && `[tool_calls]\n${s.tool_calls}`].filter(Boolean).join('\n\n') || '(empty)';
 async function loadBrowse(d) {
-  const ks = d.series.map((p) => p[0]); if (!ks.length) return;
-  const k = S.browseK ?? ks[ks.length - 1];
+  if (!d.series.length) return;
+  const k = S.browseK || 0;
   if (S.browse && S.browse.k === k && S.browse.id === d.id) return;
   const r = await api('/api/browse', { id: d.id, k });
-  S.browse = { id: d.id, k, items: r.items || [] };
+  S.browse = { id: d.id, k, items: r.items || [], prev: r.prev || { step: {}, turn: {}, stepSeq: 0, turnSeq: 0 }, reqMeta: r.reqMeta };
 }
 
 // ------------------------------------------------------------ CONTEXT: events / files / commands
 function viewEvents(d) {
   const ev = d.events, cnt = (k) => ev.filter((e) => e.kind === k).length;
-  const chips = [['all', t('evAll'), ev.length], ['compact', t('evCompact'), cnt('compact')], ['inject', t('evInject'), cnt('inject')], ['skill', t('evSkill'), cnt('skill')], ['error', t('evError'), cnt('error')], ['user', t('evUser'), cnt('user')]];
+  const chips = [['all', t('evAll'), ev.length], ['compact', t('evCompact'), cnt('compact')], ['inject', t('evInject'), cnt('inject')], ['skill', t('evSkill'), cnt('skill')], ['model', t('evModel'), cnt('model')], ['mode', t('evMode'), cnt('mode')], ['error', t('evError'), cnt('error')], ['user', t('evUser'), cnt('user')]];
   const rows = ev.filter((e) => S.ev === 'all' || e.kind === S.ev).slice().reverse().slice(0, 300);
-  return `<div class="card"><h2>${t('evTitle')}<span class="seg">${chips.map(([v, l, n]) => `<button class="${S.ev === v ? 'on' : ''}" data-act="evf" data-v="${v}">${l} ${n}</button>`).join('')}</span></h2>
-    ${rows.length ? `<div class="scroll"><table><tr><th>${t('when')}</th><th></th><th></th><th class="n">${t('dTok')}</th><th class="n">#</th></tr>${rows.map((e) => `
-      <tr class="${e.k && d.hasTokens ? 'click' : ''}" ${e.k && d.hasTokens ? `data-act="tobrowse" data-v="${e.k}"` : ''}><td>${when(e.ts)}</td><td><span class="chip k-${e.kind}">${e.kind}</span></td><td>${esc(e.label)}</td>
+  return `<div class="card"><h2>${t('evTitle')}<span class="seg">${chips.filter(([, , n], i) => i === 0 || n > 0).map(([v, l, n]) => `<button class="${S.ev === v ? 'on' : ''}" data-act="evf" data-v="${v}">${l} ${n}</button>`).join('')}</span></h2>
+    ${rows.length ? `<div class="scroll"><table><tr><th>${t('when')}</th><th></th><th></th><th></th><th class="n">${t('dTok')}</th><th class="n">#</th></tr>${rows.map((e) => `
+      <tr class="${e.k && d.hasTokens ? 'click' : ''}" ${e.k && d.hasTokens ? `data-act="tobrowse" data-v="${e.k}"` : ''}><td>${when(e.ts)}</td><td><span class="chip k-${e.kind}">${e.kind}</span></td><td class="mute">${e.turn ? `T${e.turn}` : ''} S${e.step}</td><td>${esc(e.label)}</td>
       <td class="n ${e.kind === 'compact' ? (e.tok < 0 ? 'neg' : 'pos') : ''}">${e.tok ? (e.kind === 'compact' ? (e.tok > 0 ? '+' : '') + K(e.tok) : '≈' + K(e.tok)) : ''}</td><td class="n">${e.k || ''}</td></tr>`).join('')}</table></div>` : `<div class="empty">${t('none')}</div>`}</div>`;
 }
-const fTotal = (f) => f.r + f.w + f.s + f.img;
 function viewFiles(d) {
   const q = S.fileQ.toLowerCase();
   const m = { r: 'r', w: 'w', s: 's', i: 'img' };
   let rows = d.files.filter((f) => (S.fileF === 'all' || f[m[S.fileF]] > 0) && (!q || f.name.toLowerCase().includes(q)));
+  const act = (f) => S.fileF === 'all' ? (f.r + f.w + f.s + f.img) : (f[m[S.fileF]] || 0);
+  if (S.fileSort === 'lines') rows.sort((a, b) => (b.add + b.del) - (a.add + a.del) || act(b) - act(a));
+  else if (S.fileSort === 'latest') rows.sort((a, b) => (b.last || 0) - (a.last || 0));
+  else if (S.fileSort === 'path') rows.sort((a, b) => a.name.localeCompare(b.name));
+  else if (S.fileSort === 'name') rows.sort((a, b) => a.name.split('/').pop().localeCompare(b.name.split('/').pop()));
+  else rows.sort((a, b) => act(b) - act(a));
   const count = (k) => d.files.filter((f) => f[m[k]] > 0).length;
   const add = d.files.reduce((a, f) => a + f.add, 0), del = d.files.reduce((a, f) => a + f.del, 0);
   const chips = [['all', t('evAll'), d.files.length], ['r', t('fRead'), count('r')], ['w', t('fWrite'), count('w')], ['s', t('fSearch'), count('s')], ['i', t('fImg'), count('i')]];
   return `<div class="card"><h2>${t('filesT')} <span class="sub">${d.files.length} · <span class="neg">+${add}</span> / <span class="pos">−${del}</span> ${t('lines').toLowerCase()}</span>
-    <span style="display:flex;gap:6px;flex-wrap:wrap"><input id="fq" placeholder="${t('fPath')}" value="${esc(S.fileQ)}" style="width:150px">
+    <span style="display:flex;gap:6px;flex-wrap:wrap"><input id="fq" placeholder="${t('fPath')}" value="${esc(S.fileQ)}" style="width:140px">
+    ${seg([['count', t('fsCount')], ['lines', t('fsLines')], ['latest', t('fsLatest')], ['path', t('fsPath')], ['name', t('fsName')]], S.fileSort, 'fsort')}
     <span class="seg">${chips.map(([v, l, n]) => `<button class="${S.fileF === v ? 'on' : ''}" data-act="ff" data-v="${v}">${l} ${n}</button>`).join('')}</span></span></h2>
-    ${rows.length ? rows.slice(0, 150).map((f) => `<div class="row click ${S.openFile === f.name ? 'sel' : ''}" data-act="ofile" data-v="${esc(f.name)}" title="${esc(f.name)}"><span class="mono">${esc(short(f.name))}</span>
+    ${rows.length ? rows.slice(0, 150).map((f) => `<div class="row click ${S.openFile === f.name ? 'sel' : ''}" data-act="ofile" data-v="${esc(f.name)}" title="${esc(f.name)}"><span class="mono"><em class="glyph">${extGlyph(f.name)}</em><a class="link" data-act="cppath" data-v="${esc(f.name)}" title="Copy path" style="text-decoration:none;color:inherit">${esc(short(f.name))}</a></span>
       <b>${f.r ? `${t('fRead')[0]}${f.r} ` : ''}${f.w ? `W${f.w} ` : ''}${f.s ? `S${f.s}${f.hits ? `·${f.hits}` : ''} ` : ''}${f.img ? `I${f.img} ` : ''}${f.add || f.del ? `<span class="neg">+${f.add}</span>/<span class="pos">−${f.del}</span>` : ''}</b></div>
-      ${S.openFile === f.name ? `<div style="padding:2px 0 6px 12px">${f.ops.map((o) => `<div class="item" style="grid-template-columns:70px 90px 1fr" data-act="step" data-v="${o[1]}"><span class="mute">#${o[0]}</span><span>${{ r: t('fRead'), w: t('fWrite'), s: t('fSearch'), i: t('fImg') }[o[2]]}</span><span>${o[2] === 'w' ? `+${o[3]}/−${o[4]}` : o[2] === 's' ? `${o[3]} ${t('hits')}` : ''}</span></div>${S.stepView[o[1]] ? `<pre>${esc(stepText(S.stepView[o[1]]))}</pre>` : ''}`).join('')}</div>` : ''}`).join('') : `<div class="empty">${t('none')}</div>`}</div>`;
+      ${S.openFile === f.name ? `<div style="padding:2px 0 6px 12px">${f.ops.map((o) => {
+        const key = 'f' + o[1];
+        return `<div class="item" style="grid-template-columns:64px 72px 1fr auto" data-act="step" data-v="${key}|${o[1]}"><span class="mute">#${o[0]}</span><span>${{ r: t('fRead'), w: t('fWrite'), s: t('fSearch'), i: t('fImg') }[o[2]]}</span><span>${o[2] === 'w' ? `+${o[3]}/−${o[4]}` : o[2] === 's' ? `${o[3]} ${t('hits')}` : o[2] === 'r' && (o[3] || o[4]) ? `L${o[3] || 1}–${o[4] || ''}` : ''}</span><button class="ghost" style="padding:0 5px;font-size:10px" data-act="revstep" data-v="${o[0]}|${o[1]}|${o[2] === 'w' ? 'edits' : o[2] === 's' ? 'search' : 'files'}">${t('reveal')}</button></div>${S.stepView[key] ? stepBlock(key, S.stepView[key]) : ''}`;
+      }).join('')}</div>` : ''}`).join('') : `<div class="empty">${t('none')}</div>`}</div>`;
 }
 function viewCommands(d) {
-  const L = d.cmdList;
-  const fail = L.filter((c) => c.st === 'fail').length, bg = L.filter((c) => c.st === 'bg').length, time = L.reduce((a, c) => a + c.dur, 0);
-  const q = S.cmdQ.toLowerCase();
-  const rows = L.filter((c) => (S.cmdF === 'all' || c.st === S.cmdF) && (!S.cmdProg || c.prog.split(' ').includes(S.cmdProg)) && (!q || c.cmd.toLowerCase().includes(q))).slice().reverse();
-  const slow = [...L].sort((a, b) => b.dur - a.dur).slice(0, 3);
-  return `<div class="kpis">${kpi(t('cmdRuns'), L.length)}${kpi(t('cmdFail'), fail, '', fail ? 'warn' : '')}${kpi(t('cmdBg'), bg)}${kpi(t('cmdTime'), D(time), slow[0] ? `${t('cmdSlow')} ${D(slow[0].dur)}` : '')}</div>
-  <div class="cols"><div class="card"><h2>${t('cmds')}</h2>${bars(d.cmds, { act: 'cprog', sel: S.cmdProg })}</div>
-  <div class="card"><h2>${t('vCommands')}<span class="seg">${['all', 'ok', 'fail', 'bg'].map((v) => `<button class="${S.cmdF === v ? 'on' : ''}" data-act="cf" data-v="${v}">${v === 'all' ? t('evAll') : t(v)}</button>`).join('')}</span></h2>
+  const L = (S.allCmds?.id === d.id ? S.allCmds.list : d.cmdList);
+  const covNote = d.cmdTotal > L.length ? `<div class="meta" style="gap:8px"><span class="mute">${t('cmdCov').replace('{n}', L.length).replace('{total}', d.cmdTotal)}</span><button class="ghost" data-act="loadcmds">${t('loadAll')}</button></div>` : '';
+  const fail = L.filter((c) => c.st === 'fail').length, bg = L.filter((c) => c.st === 'bg').length, long = L.filter((c) => c.dur >= 10e3).length, time = L.reduce((a, c) => a + c.dur, 0);
+  const q = S.cmdQ.toLowerCase(), pq = S.progQ.toLowerCase();
+  let rows = L.filter((c) => (S.cmdF === 'all' || c.st === S.cmdF || (S.cmdF === 'long' && c.dur >= 10e3)) && (!q || c.cmd.toLowerCase().includes(q)));
+  rows = S.cmdSort === 'dur' ? rows.slice().sort((a, b) => b.dur - a.dur) : rows.slice().reverse();
+  const slow = [...L].sort((a, b) => b.dur - a.dur)[0];
+  const failProg = Object.entries(L.filter((c) => c.st === 'fail').reduce((a, c) => { const p = c.prog.split(' ')[0]; if (p) a[p] = (a[p] || 0) + 1; return a; }, {})).sort((a, b) => b[1] - a[1])[0];
+  const repProg = d.cmds[0];
+  const progs = d.cmds.filter((x) => !pq || x.name.toLowerCase().includes(pq));
+  const nb = (label, v, cls = '') => `<span class="chip link ${S.cmdF === v ? 'ok' : cls}" data-act="cf" data-v="${v}">${label}</span>`;
+  return `<div class="kpis">${kpi(t('cmdRuns'), L.length)}${kpi(t('cmdFail'), fail, '', fail ? 'warn' : '')}${kpi(t('cmdBg'), bg)}${kpi(t('cmdTime'), D(time), slow ? `${t('cmdSlow')} ${D(slow.dur)}` : '')}</div>
+  ${covNote}
+  <div class="meta" style="gap:6px"><b>${t('notable')}</b>
+    ${slow ? `<span class="chip link" data-act="cslow">${t('cmdSlow')}: ${esc(slow.prog || slow.cmd.slice(0, 18))} (${D(slow.dur)})</span>` : ''}
+    ${failProg ? `<span class="chip link fail" data-act="cprog" data-v="${esc(failProg[0])}">${t('mostFail')}: ${esc(failProg[0])} (${failProg[1]})</span>` : ''}
+    ${repProg ? `<span class="chip link" data-act="cprog" data-v="${esc(repProg.name)}">${t('mostRep')}: ${esc(repProg.name)} (×${repProg.count})</span>` : ''}
+    ${bg ? nb(`${t('cmdBg')} ${bg}`, 'bg', 'bg') : ''}${long ? nb(`${t('cmdLong')} ${long}`, 'long') : ''}
+    ${S.cmdF !== 'all' || S.cmdQ ? `<span class="chip link" data-act="cclr">✕</span>` : ''}</div>
+  <div class="cols"><div class="card"><h2>${t('cmds')} <span class="sub">${d.cmds.length}</span></h2><input id="pq2" placeholder="${t('progFilter')}" value="${esc(S.progQ)}" style="width:100%;margin-bottom:6px">${bars(progs, { act: 'cprog', sel: S.cmdQ, extra: (x) => x.runs ? `<span class="mute" style="font-size:10.5px">(${x.runs}r)</span>` : '' })}</div>
+  <div class="card"><h2>${t('vCommands')}<span style="display:flex;gap:6px;flex-wrap:wrap">${seg([['time', t('byTime')], ['dur', t('byDur')]], S.cmdSort, 'csort')}<span class="seg">${['all', 'ok', 'fail', 'bg'].map((v) => `<button class="${S.cmdF === v ? 'on' : ''}" data-act="cf" data-v="${v}">${v === 'all' ? t('evAll') : t(v)}</button>`).join('')}</span></span></h2>
     <input id="cq" placeholder="${t('cmdFilter')}" value="${esc(S.cmdQ)}" style="width:100%;margin-bottom:6px">
-    ${rows.slice(0, 120).map((c) => `<div class="item" style="grid-template-columns:44px 52px minmax(0,1fr)" data-act="step" data-v="${c.step}" title="${esc(c.cmd)}"><span class="chip ${c.st}">${t(c.st)}</span><span class="mute">${c.dur ? D(c.dur) : ''}</span><span class="mono">${esc(c.cmd)}</span></div>${S.stepView[c.step] ? `<pre>${esc(stepText(S.stepView[c.step]))}</pre>` : ''}`).join('') || `<div class="empty">${t('none')}</div>`}</div></div>`;
+    ${rows.slice(0, 120).map((c) => {
+      const key = 'c' + c.step;
+      const meta = `<div class="meta" style="margin-bottom:3px"><span class="chip ${c.st}">${t(c.st)}${c.code != null ? ` · exit ${c.code}${c.inferredCode ? '?' : ''}` : ''}</span>${c.heredoc ? '<span class="chip">heredoc</span>' : ''}${c.truncated ? '<span class="chip warn">truncated</span>' : ''}${c.stderr ? '<span class="chip fail">stderr</span>' : ''}<span>${c.lines || 0} ${t('lines_')}</span><button class="ghost" data-act="revstep" data-v="${c.k}|${c.step}|commands">${t('reveal')}</button></div>`;
+      return `<div class="item" style="grid-template-columns:56px 48px minmax(0,1fr)" data-act="step" data-v="${key}|${c.step}" title="${esc(c.cmd)}"><span class="chip ${c.st}">${t(c.st)}${c.code ? ' ' + c.code : ''}</span><span class="mute">${c.dur ? D(c.dur) : ''}</span><span class="mono">${esc(c.cmd)}</span></div>${S.stepView[key] ? stepBlock(key, S.stepView[key], meta) : ''}`;
+    }).join('') || `<div class="empty">${t('none')}</div>`}</div></div>`;
 }
 
-// ------------------------------------------------------------ FLEET + SETTINGS
+// ------------------------------------------------------------ FLEET
+function fleetEvents(f) {
+  const title = (id) => { const n = f.nodes.find((x) => x.id === id); return n ? (n.title || id).slice(0, 36) : id.slice(0, 8); };
+  const out = [];
+  f.nodes.forEach((n) => (n.comms || []).forEach((c) => {
+    const from = c.kind === 'in' ? c.peer : n.id, to = c.kind === 'in' ? n.id : (c.peer || '');
+    out.push({ ...c, node: n.id, from, to, label: `${title(from)} → ${to ? title(to) : (c.role || '?')}` });
+  }));
+  return out.sort((a, b) => S.flOrder === 'earliest' ? (a.ts - b.ts) : (b.ts - a.ts));
+}
 function viewFleet(f) {
   const n = f.nodes;
   if (n.length < 2) return `<div class="card empty">${t('noFleet')}</div>`;
-  const W = S.st.contextWindow;
+  const evs = fleetEvents(f);
   const sumT = n.reduce((a, c) => ({ i: a.i + c.tokens.input, o: a.o + c.tokens.output }), { i: 0, o: 0 });
   const cost = n.reduce((a, c) => a + c.cost, 0);
-  return `<div class="kpis">${kpi(t('agents'), n.length)}${kpi(t('running'), n.filter((x) => x.running).length)}${kpi(t('fresh'), K(sumT.i), `${t('out')} ${K(sumT.o)}`)}${cost ? kpi(t('cost'), money(cost)) : ''}</div>` +
-    n.map((c) => `<div class="card node" style="margin-left:${Math.min(c.depth, 4) * 18}px;${c.isCurrent ? 'border-color:var(--accent)' : ''}">
-      <div style="display:flex;gap:8px;align-items:center"><span class="chip">${c.depth ? t('sub') : t('main')}</span>${c.running ? '<span class="pulse" title="running"></span>' : `<span class="mute">${t('idle')}</span>`}
-      <b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1" title="${esc(c.title)}">${esc(c.title || c.id)}</b>
+  const tasks = evs.filter((e) => e.kind === 'delegate');
+  const msgs = evs.filter((e) => e.kind !== 'delegate').length;
+  const sel = S.flAgent;
+  const node = (c) => {
+    const W = convWin(c);
+    return `<div class="card node ${c.depth ? '' : 'root'}" style="margin-left:${Math.min(c.depth, 4) * 18}px;${c.isCurrent ? 'border-color:var(--accent)' : ''}${sel === c.id ? ';outline:2px solid var(--accent)' : ''}">
+      <div style="display:flex;gap:6px;align-items:center"><span class="chip">${c.depth ? (c.agentName || (c.teammate ? 'teammate' : t('sub'))) : t('main')}</span>${c.running ? '<span class="pulse" title="running"></span>' : `<span class="mute">${t('idle')}</span>`}
+      ${c.model ? `<span class="chip">${esc(c.model.replace(/\s*\([^)]+\)/, ''))}</span>` : ''}
+      <b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:pointer" data-act="flagent" data-v="${c.id}" title="${esc(c.title)}">${esc(c.title || c.id)}</b>
       <button class="ghost" data-act="openconv" data-v="${c.id}">${t('openCtx')}</button><button class="ghost" data-act="openchat" data-v="${c.id}">${t('openChat')}</button></div>
       <div style="margin:6px 0">${stackBar(c.comp, 8)}</div>
       <div class="meta"><span>${t('ctxNow')} ${K(c.lastCtx)} (${P(c.lastCtx / W)})</span><span>${t('peak')} ${K(c.peak)}</span><span>${c.requests} ${t('req').toLowerCase()}</span><span>${c.steps} ${t('steps').toLowerCase()}</span>
-      <span>${D(c.activeMs)}</span>${c.cost ? `<span>${money(c.cost)}</span>` : ''}${c.checkpoints ? `<span class="chip warn">✂ ${c.checkpoints}</span>` : ''}</div></div>`).join('');
+      <span>${D(c.activeMs)}</span>${c.cost ? `<span>${M(c.cost)}</span>` : ''}${c.checkpoints ? `<span class="chip warn">✂ ${c.checkpoints}</span>` : ''}</div></div>`;
+  };
+  const t0 = Math.min(...n.map((c) => c.first || Infinity), ...evs.map((e) => e.ts)), t1 = Math.max(...n.map((c) => c.last || 0), ...evs.map((e) => e.ts));
+  const Wd = 600, lanes = n.filter((c) => !S.flHide || evs.some((e) => e.node === c.id)), hiddenLanes = n.length - lanes.length;
+  const X = (ts) => ((ts - t0) / Math.max(1, t1 - t0)) * (Wd - 12) + 6;
+  const lane = (c) => {
+    const mine = evs.map((e, i) => [e, i]).filter(([e]) => e.node === c.id);
+    return `<div class="lane"><span class="nm ${sel === c.id ? 'sel' : ''}" data-act="flagent" data-v="${c.id}" title="${esc(c.title)}">${esc((c.agentName || c.title || c.id).slice(0, 22))}</span>
+      <svg viewBox="0 0 ${Wd} 22" width="100%" height="22"><line x1="0" x2="${Wd}" y1="11" y2="11" stroke="var(--line)"/><rect x="${X(c.first)}" y="8" width="${Math.max(2, X(c.last) - X(c.first))}" height="6" rx="3" fill="var(--c-files)" opacity=".35"/>
+      ${mine.map(([e, i]) => `<circle cx="${X(e.ts)}" cy="11" r="4.5" fill="${e.kind === 'delegate' ? 'var(--accent)' : e.kind === 'in' ? 'var(--good)' : 'var(--c-toolCalls)'}" stroke="${S.flOpen === i ? 'var(--fg)' : 'none'}" data-act="flopen" data-v="${i}" style="cursor:pointer"><title>${esc(e.label)} · ${when(e.ts)}</title></circle>`).join('')}</svg></div>`;
+  };
+  const taskRows = tasks.map((e) => {
+    const child = n.find((x) => x.id === e.peer), parent = n.find((x) => x.id === e.node);
+    const report = parent ? (parent.comms || []).filter((c) => c.kind === 'in' && c.peer === e.peer).pop() : null;
+    return { e, child, report, status: child && child.running ? 'run' : 'done' };
+  }).filter((r) => (S.flTask === 'all' || (S.flTask === 'run') === (r.status === 'run')) && (!sel || r.e.node === sel || r.e.peer === sel));
+  const q = S.flQ.toLowerCase();
+  const stream = evs.map((e, i) => [e, i]).filter(([e]) => (S.flKind === 'all' || e.kind === S.flKind) && (!sel || e.node === sel || e.peer === sel) && (!q || (e.text + e.label).toLowerCase().includes(q)));
+  const kindL = { delegate: t('kDelegate'), in: t('kIn'), out: t('kOut') };
+  return `<div class="kpis">${kpi(t('agents'), n.length)}${kpi(t('running'), n.filter((x) => x.running).length)}${kpi(t('workItems'), tasks.length)}${kpi(t('messages'), msgs)}${kpi(t('fresh'), K(sumT.i), `${t('out')} ${K(sumT.o)}`)}${cost ? kpi(t('cost'), M(cost)) : ''}</div>
+  <div class="card"><h2>${t('network')}${sel ? `<button class="ghost" data-act="flagent" data-v="${sel}">✕ ${esc((n.find((x) => x.id === sel) || {}).title || '').slice(0, 24)}</button>` : ''}</h2>${n.map(node).join('')}</div>
+  <div class="card"><h2>${t('collab')}<span style="display:flex;gap:6px;flex-wrap:wrap">${seg([['earliest', t('earliest')], ['latest', t('latestOrd')]], S.flOrder, 'flord')}<button class="ghost ${S.flHide ? 'on' : ''}" data-act="flhide">${S.flHide ? `${t('showQuiet')} (${hiddenLanes})` : t('hideQuiet')}</button></span></h2>
+    <div class="meta" style="margin-bottom:4px"><span><span class="dot" style="background:var(--accent)"></span> ${t('kDelegate')}</span><span><span class="dot" style="background:var(--good)"></span> ${t('kIn')}</span><span><span class="dot" style="background:var(--c-toolCalls)"></span> ${t('kOut')}</span><span>${when(t0)} → ${when(t1)}</span></div>
+    ${lanes.map(lane).join('')}</div>
+  <div class="card"><h2>${t('tasksT')} <span class="sub">${taskRows.length}</span>${seg([['all', t('tAll')], ['run', t('tRunning')], ['done', t('tDone')]], S.flTask, 'fltask')}</h2>
+    ${taskRows.length ? taskRows.map(({ e, child, report, status }) => `<details><summary><span class="chip ${status === 'run' ? 'bg' : 'ok'}">${status === 'run' ? t('tRunning') : t('tDone')}</span><b style="margin-left:0;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:left">${esc(e.role || (child ? child.title : e.peer.slice(0, 8)))}</b><span class="mute">${when(e.ts)}</span></summary>
+      <div class="detail"><div class="mute">${t('brief_')}</div><div class="md"><p>${esc(e.text).replace(/\n/g, '<br>')}</p></div>
+      ${report ? `<div class="mute">${t('report')} · ${when(report.ts)}</div><div class="md"><p>${esc(report.text).replace(/\n/g, '<br>')}</p></div>` : ''}
+      ${child ? `<button class="ghost" data-act="openconv" data-v="${child.id}">${t('openCtx')}</button> <button class="ghost" data-act="openchat" data-v="${child.id}">${t('openChat')}</button>` : ''}</div></details>`).join('') : `<div class="empty">${t('none')}</div>`}</div>
+  <div class="card"><h2>${t('inspector')} <span class="sub">${stream.length}</span><span style="display:flex;gap:6px;flex-wrap:wrap"><input id="flq" placeholder="${t('filterEv')}" value="${esc(S.flQ)}" style="width:120px">
+    ${seg([['all', t('tAll')], ['delegate', t('kDelegate')], ['in', t('kIn')], ['out', t('kOut')]], S.flKind, 'flkind')}</span></h2>
+    ${stream.length ? stream.slice(0, 120).map(([e, i]) => `<div class="item" style="grid-template-columns:96px 56px minmax(0,1fr)" data-act="flopen" data-v="${i}"><span class="mute">${when(e.ts)}</span><span class="chip k-${e.kind}">${kindL[e.kind]}</span><span title="${esc(e.text)}">${esc(e.label)} — ${esc(e.text.replace(/\s+/g, ' ').slice(0, 90))}</span></div>
+      ${S.flOpen === i ? `<div class="detail"><div class="meta"><span>${t('source')}: ${esc(e.node.slice(0, 8))} · #${e.step}</span><button class="ghost" data-act="flstep" data-v="${e.node}|${e.step}">${t('rawStep')}</button></div><div class="md"><p>${esc(e.text).replace(/\n/g, '<br>')}</p></div>${S.stepView['fl_' + e.node + '_' + e.step] ? stepBlock('fl_' + e.node + '_' + e.step, S.stepView['fl_' + e.node + '_' + e.step]) : ''}</div>` : ''}`).join('') : `<div class="empty">${t('none')}</div>`}</div>`;
 }
+
+// ------------------------------------------------------------ SETTINGS
 function viewSettings() {
   const s = S.st;
   const sel = (id, opts, cur) => `<select id="${id}">${opts.map(([v, l]) => `<option value="${v}" ${String(cur) === String(v) ? 'selected' : ''}>${l}</option>`).join('')}</select>`;
   const f = (l, ctl, note = '') => `<div class="field"><div>${l}${note ? `<small>${note}</small>` : ''}</div><div>${ctl}</div></div>`;
-  return `<div class="card"><h2>${t('sDefaults')}</h2>
-    ${f(t('sRange'), sel('s_days', [[7, t('d7')], [30, t('d30')], [90, t('d90')], [0, t('all')]], s.days))}
+  return `<div class="card"><h2>${t('sEntry')}</h2>
+    ${f(t('sLang'), sel('s_lang', [['auto', t('auto')], ['en', 'English'], ['zh', '简体中文']], s.lang))}
+    ${f(t('sShowIns'), `<input type="checkbox" id="s_tins" ${s.showInsights ? 'checked' : ''}>`)}
+    ${f(t('sShowFleet'), `<input type="checkbox" id="s_tfl" ${s.showFleet ? 'checked' : ''}>`)}
+    ${f(t('sCurrency'), sel('s_cur', [['USD', 'USD ($)'], ['CNY', 'CNY (¥)']], s.currency))}
+    ${f(t('sAutoPrice'), `<input type="checkbox" id="s_ap" ${s.autoPrice ? 'checked' : ''}>`)}
     ${f(t('sWindow'), `<input type="number" id="s_win" min="1000" step="1000" value="${s.contextWindow}">`)}
-    ${f(t('sRates'), `<input type="number" id="s_ri" min="0" step="0.01" value="${s.rates.input}" title="input"> <input type="number" id="s_rc" min="0" step="0.01" value="${s.rates.cache}" title="cache read"> <input type="number" id="s_ro" min="0" step="0.01" value="${s.rates.output}" title="output">`, t('sRatesN') + ' — ' + `${t('fresh')} / ${t('cacheRead')} / ${t('out')}`)}
-    ${f(t('sSort'), sel('s_sort', [['recent', t('sortRecent')], ['peak', t('sortPeak')], ['tok', t('sortTok')]], s.sort))}
-    ${f(t('group'), `<input type="checkbox" id="s_grp" ${s.groupByProject ? 'checked' : ''}>`)}</div>
-    <div class="card"><h2>${t('sTrend')}</h2>
+    ${f(t('sRates'), `<input type="number" id="s_ri" min="0" step="0.01" value="${s.rates.input}" title="input"> <input type="number" id="s_rc" min="0" step="0.01" value="${s.rates.cache}" title="cache read"> <input type="number" id="s_ro" min="0" step="0.01" value="${s.rates.output}" title="output">`, t('sRatesN'))}</div>
+    <div class="card"><h2>${t('sView')}</h2>
+    ${f(t('sRange'), sel('s_days', [[1, t('today')], [7, t('d7')], [30, t('d30')], [90, t('d90')], [0, t('all')]], s.days))}
+    ${f(t('sSort'), sel('s_sort', [['recent', t('sortRecent')], ['peak', t('sortPeak')], ['ctx', t('sortCtx')], ['tok', t('sortTok')]], s.sort))}
+    ${f(t('group'), `<input type="checkbox" id="s_grp" ${s.groupByProject ? 'checked' : ''}>`)}
     ${f(t('gStep') + ' / ' + t('gTurn'), sel('s_gran', [['step', t('gStep')], ['turn', t('gTurn')]], s.trendGran))}
     ${f(t('mTotal') + ' / ' + t('mDelta'), sel('s_mode', [['total', t('mTotal')], ['delta', t('mDelta')]], s.trendMode))}
-    ${f(t('ovw'), `<input type="checkbox" id="s_ovw" ${s.trendOverview ? 'checked' : ''}>`)}</div>
-    <div class="card"><h2>${t('sCustom')}</h2><div class="mute" style="margin-bottom:6px">${t('sCustomN')}</div><textarea id="s_ci">${esc(s.customInstructions)}</textarea></div>
+    ${f(t('sAlwaysOvw'), `<input type="checkbox" id="s_ovw" ${s.trendOverview ? 'checked' : ''}>`)}
+    ${f(t('curves'), `<input type="checkbox" id="s_curves" ${s.trendCurves ? 'checked' : ''}>`)}
+    ${f(t('sAuto'), sel('s_auto', [[100, '100'], [200, '200'], [300, '300'], [0, t('sOff')]], s.trendAutoThreshold))}
+    ${f(t('sBase'), sel('s_cmp', [['step', t('vsStep')], ['turn', t('vsTurn')]], s.compareBaseline))}
+    ${f(t('sToolSort'), sel('s_tsort', [['count', t('byCount')], ['size', t('bySize')], ['name', t('byName')]], s.toolSort))}
+    ${f(t('sFileSort'), sel('s_fsort', [['count', t('fsCount')], ['lines', t('fsLines')], ['latest', t('fsLatest')], ['path', t('fsPath')], ['name', t('fsName')]], s.fileSort))}</div>
+    <div class="card"><h2>${t('sPrompt')}</h2><div class="mute" style="margin-bottom:6px">${t('sPromptN')}</div>
+      <div class="mute">${t('sPrefix')}</div><textarea id="s_pre">${esc(s.promptPrefix)}</textarea>
+      <div class="mute" style="margin-top:6px">${t('sSuffix')}</div><textarea id="s_suf">${esc(s.promptSuffix)}</textarea></div>
     <div><button class="pri" data-act="saveset">${t('save')}</button></div>`;
 }
 async function saveSettings() {
-  const v = (id) => $(id).value;
+  const v = (id) => $(id).value, c = (id) => $(id).checked;
   const next = await api('/api/settings/save', {
-    days: Number(v('#s_days')), contextWindow: Number(v('#s_win')), sort: v('#s_sort'), groupByProject: $('#s_grp').checked,
+    days: Number(v('#s_days')), contextWindow: Number(v('#s_win')), autoPrice: c('#s_ap'), currency: v('#s_cur'),
+    sort: v('#s_sort'), groupByProject: c('#s_grp'), toolSort: v('#s_tsort'), fileSort: v('#s_fsort'), lang: v('#s_lang'),
     rates: { input: Number(v('#s_ri')), cache: Number(v('#s_rc')), output: Number(v('#s_ro')) },
-    trendGran: v('#s_gran'), trendMode: v('#s_mode'), trendOverview: $('#s_ovw').checked, customInstructions: v('#s_ci'),
+    trendGran: v('#s_gran'), trendMode: v('#s_mode'), trendOverview: c('#s_ovw'), trendAutoThreshold: Number(v('#s_auto')), trendCurves: c('#s_curves'), compareBaseline: v('#s_cmp'),
+    showInsights: c('#s_tins'), showFleet: c('#s_tfl'), promptPrefix: v('#s_pre'), promptSuffix: v('#s_suf'),
   });
-  S.st = next; applyDefaults(); toast(t('saved')); render(true);
+  S.st = next; applyDefaults(true); toast(t('saved')); render(true);
 }
-function applyDefaults() { const s = S.st; S.gran = s.trendGran; S.mode = s.trendMode; S.ovw = s.trendOverview; S.sort = s.sort; S.group = s.groupByProject; }
+function applyDefaults(keepView) {
+  const s = S.st;
+  zh = s.lang === 'auto' ? /^zh/i.test(navigator.language) : s.lang === 'zh';
+  S.gran = s.trendGran; S.mode = s.trendMode; S.ovwUser = s.trendOverview ? true : null; S.curves = s.trendCurves;
+  S.sort = s.sort; S.group = s.groupByProject; S.toolSort = s.toolSort; S.fileSort = s.fileSort; S.cmp = s.compareBaseline;
+  if (!keepView) { S.archived = s.archivedMode || 'active'; S.rangeDays = s.days; if (!s.showInsights && S.tab === 'insights') S.tab = 'context'; }
+}
 
 // ------------------------------------------------------------ controller
 function chrome() {
-  $('#tabs').innerHTML = [['insights', t('insights')], ['context', t('context')], ['fleet', t('fleet')], ['settings', t('settings')]].map(([k, l]) =>
-    `<button class="${S.tab === k ? 'on' : ''}" data-act="tab" data-v="${k}">${l}</button>`).join('');
+  const tabs = [['context', t('context')]];
+  if (S.st?.showInsights !== false) tabs.unshift(['insights', t('insights')]);
+  if (S.st?.showFleet !== false) tabs.push(['fleet', t('fleet')]);
+  tabs.push(['settings', t('settings')]);
+  $('#tabs').innerHTML = tabs.map(([k, l]) => `<button class="${S.tab === k ? 'on' : ''}" data-act="tab" data-v="${k}">${l}</button>`).join('');
   $('#askbar').innerHTML = (S.tab === 'context' || S.tab === 'fleet')
     ? `<button class="ghost" data-act="side" title="${esc(t('sideTip'))}">${t('side')}</button> <button class="ghost" data-act="btw" title="${esc(t('btwTip'))}">${t('copyBtw')}</button>` : '';
 }
@@ -549,10 +1146,14 @@ async function render(soft) {
   chrome();
   const app = $('#app');
   try {
-    if (!S.st) { S.st = await api('/api/settings'); applyDefaults(); }
+    if (!S.st) {
+      const [st, pinfo] = await Promise.all([api('/api/settings'), api('/api/plugin-info').catch(() => null)]);
+      S.st = st; S.pinfo = pinfo; applyDefaults(); chrome();
+    }
     let html = '', after = null;
     if (S.tab === 'insights') {
-      S.o = await api('/api/overview', {}); html = viewInsights(S.o);
+      S.o = await api('/api/overview', { days: S.rangeDays, day: S.f.day || '', from: S.from, to: S.to, archived: S.archived });
+      html = viewInsights(S.o);
     } else if (S.tab === 'settings') {
       html = viewSettings();
     } else if (S.tab === 'fleet') {
@@ -562,15 +1163,33 @@ async function render(soft) {
       const d = await api('/api/conversation', { id: curId() });
       if (d.error) { app.innerHTML = `<div class="empty">${t('none')}</div>`; return; }
       S.d = d;
+      if (S.trendDna && (S.dnaCache?.id !== d.id || S.dnaCache?.req !== d.requests)) { S.dnaCache = await api('/api/dna', { id: d.id }); S.dnaCache.req = d.requests; }
       if (S.view === 'browser') await loadBrowse(d);
       const body = S.view === 'overview' ? viewOverview(d) : S.view === 'browser' ? viewBrowser(d) : S.view === 'events' ? viewEvents(d) : S.view === 'files' ? viewFiles(d) : viewCommands(d);
       html = ctxNav(d) + body;
-      after = (pl) => { if (S.view === 'overview' && d.hasTokens) wireTrend(pl); };
+      after = (ps) => {
+        if (S.view === 'overview' && d.hasTokens) {
+          wireTrend(ps);
+          const br = $('#stepbrief'); if (br) br.innerHTML = briefHtml(d, S.hoverIdx);
+        }
+        if (S.view === 'browser' && S.autoExpandStep && S.browse) {
+          const match = S.browse.items.find((i) => i.step === S.autoExpandStep && (!S.openCat || i.cat === S.openCat)) || S.browse.items.find((i) => i.step === S.autoExpandStep);
+          S.autoExpandStep = null;
+          if (match) {
+            S.openCat = match.cat;
+            const key = 'b' + match.step + '_' + match.pos;
+            openStep(key + '|' + match.step).then(() => {
+              const el = document.querySelector('.item.hl'); if (el) el.scrollIntoView({ block: 'center' });
+            });
+          }
+        }
+      };
     }
     const keep = soft ? { x: scrollX, y: scrollY } : null;
-    const prevLeft = soft && $('#tscroll') ? $('#tscroll').scrollLeft : null;
+    const sc = $('#tscroll');
+    const prevScroll = soft && sc ? { left: sc.scrollLeft, atEnd: sc.scrollLeft + sc.clientWidth >= sc.scrollWidth - 8 } : null;
     app.innerHTML = html;
-    if (after) after(prevLeft);
+    if (after) after(prevScroll);
     if (keep) scrollTo(keep.x, keep.y); else if (!soft) scrollTo(0, 0);
   } catch (e) {
     app.innerHTML = `<div class="empty">${esc(e.message || e)}</div>`;
@@ -578,20 +1197,21 @@ async function render(soft) {
   clearTimeout(timer);
   timer = setTimeout(() => {
     const a = document.activeElement;
-    if (S.tab !== 'settings' && !(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) && S.pin == null && !Object.keys(S.stepView).length) render(true); else render.later();
+    if (S.tab !== 'settings' && !(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) && S.pin == null && !Object.keys(S.stepView).length && S.flOpen == null && !S.pickOpen) render(true); else render.later();
   }, S.tab === 'insights' ? 60000 : 20000);
 }
 render.later = () => { timer = setTimeout(() => render(true), 20000); };
 
-async function openStep(step) {
-  if (S.stepView[step]) { delete S.stepView[step]; return render(true); }
-  S.stepView[step] = { content: '…' }; render(true);
-  S.stepView[step] = await api('/api/step', { id: S.d.id, step: Number(step) }); render(true);
+async function openStep(val) {
+  const [key, step] = val.split('|');
+  if (S.stepView[key]) { delete S.stepView[key]; return render(true); }
+  S.stepView[key] = { content: '…' }; render(true);
+  S.stepView[key] = await api('/api/step', { id: S.d.id, step: Number(step) }); render(true);
 }
 async function askSide() {
   try {
     const id = S.d?.id || curId();
-    const r = await api('/api/ask-prompt', { id, lang: navigator.language });
+    const r = await api('/api/ask-prompt', { id, lang: zh ? 'zh' : 'en' });
     if (r.error) throw new Error(r.error);
     const res = await window.sidecar.agent.startConversation(r.prompt, 'Context insight');
     toast(t('sideOk'));
@@ -601,53 +1221,97 @@ async function askSide() {
 }
 async function copyBtw() {
   try {
-    const r = await api('/api/ask-prompt', { id: S.d?.id || curId(), lang: navigator.language });
-    const text = '/btw ' + r.btw;
-    try { await navigator.clipboard.writeText(text); } catch {
-      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
-    }
+    const r = await api('/api/ask-prompt', { id: S.d?.id || curId(), lang: zh ? 'zh' : 'en' });
+    await copyText('/btw ' + r.btw);
     toast(t('btwOk'));
   } catch (e) { toast(String(e.message || e).slice(0, 80)); }
 }
+const stepNav = (dir) => { const ks = S.d.series.map((p) => p[0]); const i = S.browseK ? ks.indexOf(S.browseK) : ks.length; const j = Math.max(0, Math.min(ks.length, i + dir)); S.browseK = j >= ks.length ? 0 : ks[j]; S.browse = null; };
 
+const SOFT = ['metric', 'hmet', 'sort', 'group', 'ftool', 'fcmd', 'fskill', 'fgrp', 'exp', 'ff', 'fsort', 'ofile', 'evf', 'cf', 'cprog', 'csort', 'cslow', 'cclr', 'torder', 'tsort', 'mode', 'ovw', 'adapt', 'gran', 'curves', 'tdna', 'dnaclr', 'unpin', 'bmode', 'bsort', 'cmp', 'bmap', 'bdel', 'picktog', 'vm', 'fprev', 'fnext', 'flagent', 'flkind', 'fltask', 'flopen', 'flhide', 'flord', 'range', 'dclear', 'pg'];
 const ACT = {
-  tab: (v) => { S.tab = v; S.convId = S.tab === 'insights' ? null : S.convId; },
-  view: (v) => { S.view = v; },
+  tab: (v) => { S.tab = v; if (v === 'insights') S.convId = null; },
+  view: (v) => { S.view = v; S.pickOpen = false; },
   back: () => { S.convId = null; S.tab = 'insights'; S.pin = null; },
-  openconv: (v) => { S.convId = v; S.tab = 'context'; S.view = 'overview'; S.pin = null; S.browseK = null; S.browse = null; S.stepView = {}; },
+  openconv: (v) => { S.convId = v; S.tab = 'context'; S.view = 'overview'; S.pin = null; S.tPinnedRight = true; S.browseK = 0; S.browse = null; S.stepView = {}; S.openFile = null; S.dnaCache = null; S.dnaItem = null; S.dnaMeta = null; S.allCmds = null; },
   openchat: (v) => { window.sidecar.ui?.toggleConversation(v); return 'noop'; },
-  gran: (v) => { S.gran = v; S.pin = null; }, mode: (v) => { S.mode = v; }, ovw: () => { S.ovw = !S.ovw; },
-  torder: (v) => { S.turnOrder = v; }, metric: (v) => { S.metric = v; }, sort: (v) => { S.sort = v; }, group: () => { S.group = !S.group; },
-  ftool: (v) => { S.f.tool = S.f.tool === v ? null : v; }, fcmd: (v) => { S.f.cmd = S.f.cmd === v ? null : v; },
-  fskill: (v) => { S.f.skill = S.f.skill === v ? null : v; }, fday: (v) => { S.f.day = S.f.day === v ? null : v; S.tab = 'insights'; },
-  fclear: () => { S.f = { tool: null, cmd: null, skill: null, day: null, q: '' }; },
-  tobrowse: (v) => { S.view = 'browser'; S.browseK = Number(v); S.browse = null; },
-  bprev: () => { const ks = S.d.series.map((p) => p[0]); const i = ks.indexOf(S.browseK ?? ks[ks.length - 1]); S.browseK = ks[Math.max(0, i - 1)]; S.browse = null; },
-  bnext: () => { const ks = S.d.series.map((p) => p[0]); const i = ks.indexOf(S.browseK ?? ks[ks.length - 1]); S.browseK = ks[Math.min(ks.length - 1, i + 1)]; S.browse = null; },
-  evf: (v) => { S.ev = v; }, ff: (v) => { S.fileF = v; }, ofile: (v) => { S.openFile = S.openFile === v ? null : v; },
-  cf: (v) => { S.cmdF = v; }, cprog: (v) => { S.cmdProg = S.cmdProg === v ? null : v; },
+  gofleet: () => { S.tab = 'fleet'; }, gofiles: (v) => { S.tab = 'context'; S.view = 'files'; S.fileF = v; }, goevents: () => { S.tab = 'context'; S.view = 'events'; },
+  gotool: (v) => { S.tab = 'context'; S.view = 'browser'; S.browseK = 0; S.browse = null; S.bq = v; S.openCat = 'toolCalls'; },
+  gran: (v) => { S.gran = v; S.pin = null; S.tPinnedRight = true; }, mode: (v) => { S.mode = v; },
+  ovw: () => { S.ovwUser = !ovwOn(S.d ? trendPoints(S.d).length : 0); S.tPinnedRight = true; if (S.ovwUser) { S.adapt = false; S.trendDna = false; } },
+  adapt: () => { S.adapt = !S.adapt; if (S.adapt) { S.ovwUser = false; S.trendDna = false; } },
+  curves: () => { S.curves = !S.curves; },
+  tdna: () => { S.trendDna = !S.trendDna; S.tPinnedRight = true; if (S.trendDna) { S.ovwUser = false; S.adapt = false; } else S.dnaItem = null; },
+  unpin: () => { S.pin = null; },
+  torder: (v) => { S.turnOrder = v; }, tsort: (v) => { S.toolSort = v; },
+  metric: (v) => { S.metric = v; }, hmet: (v) => { S.heatMetric = v; }, sort: (v) => { S.sort = v; S.page = 0; }, group: () => { S.group = !S.group; },
+  pg: (v) => { S.page = Math.max(0, S.page + Number(v)); },
+  range: (v) => { S.rangeDays = Number(v); S.f.day = null; S.from = ''; S.to = ''; S.page = 0; api('/api/settings/save', { days: S.rangeDays }).then((n) => { S.st = n; }).catch(() => {}); },
+  dclear: () => { S.from = ''; S.to = ''; },
+  ftool: (v) => { S.f.tool = S.f.tool === v ? null : v; S.page = 0; }, fcmd: (v) => { S.f.cmd = S.f.cmd === v ? null : v; S.page = 0; },
+  fskill: (v) => { S.f.skill = S.f.skill === v ? null : v; S.page = 0; }, fgrp: (v) => { const g = v === '__ALL__' ? null : v; S.f.grp = S.f.grp === g ? null : g; S.page = 0; }, exp: (v) => { S.exp[v] = !S.exp[v]; }, fday: (v) => { S.f.day = S.f.day === v ? null : v; S.tab = 'insights'; S.page = 0; },
+  fclear: () => { S.f = { tool: null, cmd: null, skill: null, day: null, grp: null, q: '' }; S.page = 0; },
+  tobrowse: (v) => { S.view = 'browser'; S.browseK = Number(v); S.browse = null; S.pickOpen = false; S.bdelta = S.mode === 'delta'; },
+  tobrowsecat: (v) => { const [cat, k] = v.split('|'); S.view = 'browser'; S.openCat = cat; if (k) S.browseK = Number(k); S.browse = null; },
+  mapjump: (v) => { const [cat, stp] = v.split('|'); S.openCat = cat; S.hlStep = Number(stp); S.autoExpandStep = Number(stp); render(true); return 'noop'; },
+  picktog: () => { S.pickOpen = !S.pickOpen; },
+  bprev: () => stepNav(-1), bnext: () => stepNav(1),
+  bmode: (v) => { S.bmode = v; }, bsort: (v) => { S.bsort = v; }, cmp: (v) => { S.cmp = v; },
+  bmap: () => { S.btreemap = !S.btreemap; }, bdel: () => { S.bdelta = !S.bdelta; }, dnaclr: () => { S.dnaItem = null; S.dnaMeta = null; }, loadcmds: () => { api('/api/commands', { id: S.d.id }).then((r) => { S.allCmds = { id: S.d.id, list: r.cmdList || [] }; render(true); }); return 'noop'; },
+  vm: (v) => { const [k, m] = v.split('|'); S.vmode[k] = m; },
+  cpstep: (v) => { const [k, cat] = v.split('|'); if (S.stepView[k]) copyText(stepText(S.stepView[k], cat)); return 'noop'; },
+  cpj: (v) => { copyText(v); return 'noop'; },
+  cppath: (v) => { copyText(v); return 'noop'; },
+  fprev: (v) => { S.findIdx[v] = (S.findIdx[v] || 0) - 1; }, fnext: (v) => { S.findIdx[v] = (S.findIdx[v] || 0) + 1; },
+  evf: (v) => { S.ev = v; }, ff: (v) => { S.fileF = v; }, fsort: (v) => { S.fileSort = v; }, ofile: (v) => { S.openFile = S.openFile === v ? null : v; },
+  cf: (v) => { S.cmdF = v; }, cprog: (v) => { S.cmdQ = S.cmdQ === v ? '' : v; }, csort: (v) => { S.cmdSort = v; },
+  cslow: () => { S.cmdSort = 'dur'; S.cmdF = 'all'; }, cclr: () => { S.cmdF = 'all'; S.cmdQ = ''; },
+  revstep: (v) => { const [k, stp, cat] = v.split('|'); S.view = 'browser'; S.browseK = Number(k) || 0; S.browse = null; S.hlStep = Number(stp); S.autoExpandStep = Number(stp); S.openCat = cat || 'commands'; },
   step: (v) => { openStep(v); return 'noop'; },
+  zoom: (v) => { const c = S.mediaCache[v]; if (c?.dataUrl) $('#modal').innerHTML = `<div class="modal" data-act="zclose"><img src="${c.dataUrl}"></div>`; return 'noop'; },
+  zclose: () => { $('#modal').innerHTML = ''; return 'noop'; },
+  flagent: (v) => { S.flAgent = S.flAgent === v ? null : v; }, flkind: (v) => { S.flKind = v; }, fltask: (v) => { S.flTask = v; },
+  flopen: (v) => { S.flOpen = S.flOpen === Number(v) ? null : Number(v); }, flhide: () => { S.flHide = !S.flHide; }, flord: (v) => { S.flOrder = v; },
+  flstep: (v) => { (async () => { const [id, step] = v.split('|'); const key = 'fl_' + id + '_' + step; if (S.stepView[key]) { delete S.stepView[key]; render(true); return; } S.stepView[key] = await api('/api/step', { id, step: Number(step) }); render(true); })(); return 'noop'; },
   saveset: () => { saveSettings(); return 'noop'; },
   side: () => { askSide(); return 'noop'; }, btw: () => { copyBtw(); return 'noop'; },
 };
 document.addEventListener('click', (e) => {
+  if (S.pickOpen && !e.target.closest('.pickpop')) { S.pickOpen = false; render(true); }
   const b = e.target.closest('[data-act]'); if (!b) return;
+  if (b.dataset.act === 'cppath') e.stopPropagation();
   const fn = ACT[b.dataset.act]; if (!fn) return;
   if (fn(b.dataset.v) === 'noop') return;
-  render(['metric', 'sort', 'group', 'ftool', 'fcmd', 'fskill', 'ff', 'ofile', 'evf', 'cf', 'cprog', 'torder', 'mode', 'ovw', 'gran'].includes(b.dataset.act));
+  render(SOFT.includes(b.dataset.act));
 });
 document.addEventListener('input', (e) => {
+  const fKey = e.target.dataset?.find;
+  if (fKey) {
+    S.findQ[fKey] = e.target.value; S.findIdx[fKey] = 0;
+    const pos = e.target.selectionStart;
+    clearTimeout(input.t); input.t = setTimeout(async () => { await render(true); const el = document.querySelector(`[data-find="${fKey}"]`); if (el) { el.focus(); el.setSelectionRange(pos, pos); } }, 150);
+    return;
+  }
   const id = e.target.id;
-  if (!['q', 'fq', 'cq'].includes(id)) return;
-  if (id === 'q') S.f.q = e.target.value; else if (id === 'fq') S.fileQ = e.target.value; else S.cmdQ = e.target.value;
+  if (!['q', 'fq', 'cq', 'pq2', 'bq', 'pq', 'flq'].includes(id)) return;
+  if (id === 'q') { S.f.q = e.target.value; S.page = 0; }
+  else if (id === 'fq') S.fileQ = e.target.value;
+  else if (id === 'cq') S.cmdQ = e.target.value;
+  else if (id === 'pq2') S.progQ = e.target.value;
+  else if (id === 'bq') S.bq = e.target.value;
+  else if (id === 'pq') S.pickQ = e.target.value;
+  else S.flQ = e.target.value;
   const pos = e.target.selectionStart;
-  clearTimeout(input.t); input.t = setTimeout(async () => { await render(true); const el = $('#' + id); if (el) { el.focus(); el.setSelectionRange(pos, pos); } }, 180);
+  clearTimeout(input.t); input.t = setTimeout(async () => { await render(true); const el = $('#' + id); if (el) { el.focus(); el.setSelectionRange(pos, pos); } }, 160);
 });
 function input() {}
 document.addEventListener('change', (e) => {
-  if (e.target.id === 'bsel') { S.browseK = Number(e.target.value); S.browse = null; render(true); }
+  const id = e.target.id;
+  if (id === 'dfrom') { S.from = e.target.value; S.f.day = null; S.page = 0; render(true); }
+  else if (id === 'dto') { S.to = e.target.value; S.f.day = null; S.page = 0; render(true); }
+  else if (id === 'archsel') { S.archived = e.target.value; S.page = 0; api('/api/settings/save', { archivedMode: S.archived }).catch(() => {}); render(true); }
 });
-document.addEventListener('toggle', (e) => { if (e.target.tagName === 'DETAILS') S.openCat = e.target.open ? e.target.dataset.cat : (S.openCat === e.target.dataset.cat ? null : S.openCat); }, true);
+document.addEventListener('toggle', (e) => { if (e.target.tagName === 'DETAILS' && e.target.dataset.cat) S.openCat = e.target.open ? e.target.dataset.cat : (S.openCat === e.target.dataset.cat ? null : S.openCat); }, true);
 $('#refresh').addEventListener('click', () => render(true));
 render();
 </script>
