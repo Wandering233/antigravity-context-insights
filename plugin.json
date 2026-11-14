@@ -1,8 +1,8 @@
 {
   "name": "agy-context",
   "displayName": "Context Insights",
-  "version": "0.2.0",
-  "description": "Context insight for Antigravity, inspired by dsh-context: a side-pane dashboard (insights, context trend and browser, events, file activity, commands, subagent fleet, settings) and a /context skill showing what fills the context window, how it grows per turn, and token, cache and cost usage. Includes an isolated side-question analysis and a /btw helper.",
+  "version": "0.3.0",
+  "description": "Context insight for Antigravity, inspired by dsh-context: a side-pane dashboard (insights with heatmap & custom dates, context trend with adaptive/overview/duration/DNA modes, treemap & JSON/Markdown browser, events with model switches, files, commands, subagent fleet, settings) and a /context skill.",
   "logo": "assets/logo.svg",
   "author": "Wandering233",
   "homepage": "https://github.com/Wandering233/antigravity-context-insights",
