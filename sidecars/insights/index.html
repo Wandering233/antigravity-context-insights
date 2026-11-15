@@ -225,7 +225,7 @@ const I = {
   sShowIns: ['Insights tab', '洞察标签页'], sShowFleet: ['Fleet tab', '编队标签页'],
   sPrefix: ['Prefix', '前缀'], sSuffix: ['Suffix', '后缀'],
   sPromptN: ['Saved to this plugin’s always-on rule (rules/AGENTS.md), applied to every conversation. Clear both to remove. May need a restart.', '保存为本插件常驻规则(rules/AGENTS.md),对所有会话生效;清空即移除。可能需要重启生效。'],
-  save: ['Save', '保存'], saved: ['Saved', '已保存'], auto: ['Auto', '自动'],
+  save: ['Save', '保存'], saved: ['Saved', '已保存'], auto: ['Auto', '自动'], errTitle: ['Failed to load', '加载失败'], retry: ['Retry', '重试'], resetView: ['Back to overview', '回到默认视图'], refreshed: ['Refreshed', '已刷新'], restartHint: ['If you updated the plugin without restarting Antigravity, restart Antigravity so the background sidecar reloads.', '若刚更新过插件尚未重启 Antigravity,请重启一次以让后台 sidecar 重新加载代码。'],
   user: ['User messages', '用户消息'], system: ['System / checkpoints', '系统 / 检查点'], reasoning: ['Reasoning', '推理'],
   answer: ['Answers', '回答'], toolCalls: ['Tool call args', '工具调用参数'], commands: ['Command output', '命令输出'],
   files: ['File reads', '文件读取'], edits: ['Edit results', '编辑结果'], search_: ['Search & web', '搜索与网页'],
@@ -277,8 +277,15 @@ const S = {
 let timer = null;
 const api = async (path, body) => {
   const r = await window.sidecar.fetch(path, { method: 'POST', body: JSON.stringify(body || {}) });
-  if (!r.ok) throw new Error(await r.text());
-  return r.json();
+  const txt = await r.text();
+  let data = null;
+  try { data = txt ? JSON.parse(txt) : {}; } catch {}
+  if (!r.ok) {
+    const err = new Error((data && data.error) || txt || `HTTP ${r.status}`);
+    err.api = path; err.status = r.status;
+    throw err;
+  }
+  return data ?? {};
 };
 const curId = () => S.convId || window.sidecar.conversationId || undefined;
 function toast(msg) { const e = $('#toast'); e.textContent = msg; e.style.display = 'block'; clearTimeout(e._t); e._t = setTimeout(() => { e.style.display = 'none'; }, 2400); }
@@ -1163,7 +1170,15 @@ async function render(soft) {
       const d = await api('/api/conversation', { id: curId() });
       if (d.error) { app.innerHTML = `<div class="empty">${t('none')}</div>`; return; }
       S.d = d;
-      if (S.trendDna && (S.dnaCache?.id !== d.id || S.dnaCache?.req !== d.requests)) { S.dnaCache = await api('/api/dna', { id: d.id }); S.dnaCache.req = d.requests; }
+      if (S.trendDna && (S.dnaCache?.id !== d.id || S.dnaCache?.req !== d.requests)) {
+        try {
+          S.dnaCache = await api('/api/dna', { id: d.id });
+          S.dnaCache.req = d.requests;
+        } catch (dnaErr) {
+          S.trendDna = false; S.dnaCache = null;
+          toast(`${dnaErr.api || '/api/dna'}: ${dnaErr.message}`);
+        }
+      }
       if (S.view === 'browser') await loadBrowse(d);
       const body = S.view === 'overview' ? viewOverview(d) : S.view === 'browser' ? viewBrowser(d) : S.view === 'events' ? viewEvents(d) : S.view === 'files' ? viewFiles(d) : viewCommands(d);
       html = ctxNav(d) + body;
@@ -1192,13 +1207,19 @@ async function render(soft) {
     if (after) after(prevScroll);
     if (keep) scrollTo(keep.x, keep.y); else if (!soft) scrollTo(0, 0);
   } catch (e) {
-    app.innerHTML = `<div class="empty">${esc(e.message || e)}</div>`;
+    const msg = String(e?.message || e || 'Unknown error');
+    app.innerHTML = `<div class="card"><h2 class="warn">${t('errTitle')}${e?.api ? `<span class="sub">${esc(e.api)}${e.status ? ` · HTTP ${e.status}` : ''}</span>` : ''}</h2>
+      <div style="margin:6px 0">${esc(msg)}</div>
+      ${/is not defined|HTTP 500/i.test(msg) ? `<div class="mute" style="margin-bottom:8px">${t('restartHint')}</div>` : ''}
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="pri" data-act="retry">${t('retry')}</button><button class="ghost" data-act="resetv">${t('resetView')}</button></div></div>`;
+    return false;
   }
   clearTimeout(timer);
   timer = setTimeout(() => {
     const a = document.activeElement;
     if (S.tab !== 'settings' && !(a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) && S.pin == null && !Object.keys(S.stepView).length && S.flOpen == null && !S.pickOpen) render(true); else render.later();
   }, S.tab === 'insights' ? 60000 : 20000);
+  return true;
 }
 render.later = () => { timer = setTimeout(() => render(true), 20000); };
 
@@ -1273,6 +1294,8 @@ const ACT = {
   flagent: (v) => { S.flAgent = S.flAgent === v ? null : v; }, flkind: (v) => { S.flKind = v; }, fltask: (v) => { S.flTask = v; },
   flopen: (v) => { S.flOpen = S.flOpen === Number(v) ? null : Number(v); }, flhide: () => { S.flHide = !S.flHide; }, flord: (v) => { S.flOrder = v; },
   flstep: (v) => { (async () => { const [id, step] = v.split('|'); const key = 'fl_' + id + '_' + step; if (S.stepView[key]) { delete S.stepView[key]; render(true); return; } S.stepView[key] = await api('/api/step', { id, step: Number(step) }); render(true); })(); return 'noop'; },
+  retry: () => { refreshAll(); return 'noop'; },
+  resetv: () => { S.trendDna = false; S.view = 'overview'; S.convId = null; S.dnaCache = null; S.browse = null; S.allCmds = null; S.stepView = {}; render(false); return 'noop'; },
   saveset: () => { saveSettings(); return 'noop'; },
   side: () => { askSide(); return 'noop'; }, btw: () => { copyBtw(); return 'noop'; },
 };
@@ -1312,7 +1335,15 @@ document.addEventListener('change', (e) => {
   else if (id === 'archsel') { S.archived = e.target.value; S.page = 0; api('/api/settings/save', { archivedMode: S.archived }).catch(() => {}); render(true); }
 });
 document.addEventListener('toggle', (e) => { if (e.target.tagName === 'DETAILS' && e.target.dataset.cat) S.openCat = e.target.open ? e.target.dataset.cat : (S.openCat === e.target.dataset.cat ? null : S.openCat); }, true);
-$('#refresh').addEventListener('click', () => render(true));
+async function refreshAll() {
+  const btn = $('#refresh');
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+  S.st = null; S.dnaCache = null; S.browse = null; S.allCmds = null; S.stepView = {}; S.mediaCache = {};
+  const ok = await render(false);
+  if (btn) { btn.disabled = false; btn.textContent = '↻'; }
+  if (ok) toast(t('refreshed'));
+}
+$('#refresh').addEventListener('click', refreshAll);
 render();
 </script>
 </body>
