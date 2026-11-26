@@ -3,41 +3,62 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light dark">
 <title>Context Insights</title>
 <script src="/preload.js"></script>
 <style>
   :root {
     --fg: var(--foreground, #333);
     --bg: var(--background, #fafafa);
-    --card: color-mix(in srgb, var(--fg) 5%, transparent);
-    --line: color-mix(in srgb, var(--fg) 13%, transparent);
-    --mute: color-mix(in srgb, var(--fg) 58%, transparent);
+    --card: color-mix(in srgb, var(--fg) 6%, transparent);
+    --card-border: color-mix(in srgb, var(--fg) 15%, transparent);
+    --line: color-mix(in srgb, var(--fg) 14%, transparent);
+    --mute: color-mix(in srgb, var(--fg) 64%, transparent);
+    --surface-glass: color-mix(in srgb, var(--bg) 48%, transparent);
+    --surface-pop: color-mix(in srgb, var(--bg) 82%, transparent);
     --accent: #5b8def; --bad: #e5714f; --good: #4f9d69;
     --c-base:#6b7280; --c-user:#4f9d69; --c-system:#8c8c8c; --c-reasoning:#a678de; --c-answer:#3fb6c9; --c-toolCalls:#e0a43a; --c-toolAll:#e0a43a;
     --c-commands:#e5714f; --c-files:#5b8def; --c-edits:#d65d9a; --c-search:#6aa84f; --c-mcp:#b08968; --c-other:#9aa5b1; --c-skills:#2dbfa4;
   }
   * { box-sizing: border-box; }
-  body { font: 12.5px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; overflow-x: hidden; }
-  header { position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
-    padding: 8px 14px; background: var(--bg); border-bottom: 1px solid var(--line); }
+  html, body {
+    background: transparent !important;
+    background-color: transparent !important;
+    border-bottom-left-radius: 16px;
+    border-bottom-right-radius: 16px;
+    min-height: 100vh;
+  }
+  body {
+    font: 12.5px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    overflow-x: hidden;
+    color: var(--fg);
+  }
+  header {
+    position: sticky; top: 0; z-index: 6; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    padding: 8px 14px;
+    background: var(--surface-glass);
+    backdrop-filter: blur(14px) saturate(160%);
+    -webkit-backdrop-filter: blur(14px) saturate(160%);
+    border-bottom: 1px solid var(--line);
+  }
   header h1 { font-size: 14px; margin: 0 6px 0 0; }
-  .tabs, .seg { display: inline-flex; gap: 2px; background: var(--card); padding: 2px; border-radius: 8px; flex-wrap: wrap; }
+  .tabs, .seg { display: inline-flex; gap: 2px; background: var(--card); padding: 2px; border-radius: 8px; flex-wrap: wrap; border: 1px solid var(--line); }
   .seg { padding: 1px; }
   button, select, input, textarea { font: inherit; color: inherit; }
   button { background: transparent; border: 1px solid transparent; border-radius: 6px; padding: 3px 10px; cursor: pointer; }
-  select, input, textarea { border: 1px solid var(--line); background: var(--bg); border-radius: 6px; padding: 3px 8px; }
+  select, input, textarea { border: 1px solid var(--line); background: var(--surface-pop); border-radius: 6px; padding: 3px 8px; }
   textarea { width: 100%; min-height: 92px; resize: vertical; font-family: ui-monospace, monospace; font-size: 12px; }
   input[type=number] { width: 105px; }
   button:hover:not(:disabled) { background: var(--card); }
   button:disabled { opacity: .4; cursor: default; }
-  button.on { background: var(--bg); border-color: var(--line); font-weight: 600; }
+  button.on { background: var(--surface-pop); border-color: var(--line); font-weight: 600; }
   button.ghost { border-color: var(--line); }
   button.pri { background: var(--accent); color: #fff; border-color: var(--accent); }
   .grow { flex: 1; }
   main { padding: 14px; display: grid; gap: 12px; max-width: 1120px; margin: 0 auto; }
   main > *, .cols > *, .kpis > * { min-width: 0; }
   .kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 11px 13px; }
+  .card { background: var(--card); border: 1px solid var(--card-border); border-radius: 12px; padding: 11px 13px; }
   .card h2 { margin: 0 0 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--mute); font-weight: 600;
     display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
   .kpi .v { font-size: 20px; font-weight: 650; letter-spacing: -.01em; }
@@ -83,7 +104,7 @@
   svg text { fill: var(--mute); font-size: 10px; }
   .empty { color: var(--mute); text-align: center; padding: 22px; }
   .sub { color: var(--mute); font-weight: 400; text-transform: none; letter-spacing: 0; }
-  .tip { position: fixed; pointer-events: none; z-index: 20; background: var(--bg); border: 1px solid var(--line); border-radius: 6px;
+  .tip { position: fixed; pointer-events: none; z-index: 20; background: var(--surface-pop); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 6px;
     padding: 4px 8px; font-size: 11px; box-shadow: 0 4px 14px rgba(0,0,0,.18); display: none; white-space: nowrap; }
   .scroll { overflow-x: auto; }
   .pin { border-color: var(--accent); }
@@ -393,11 +414,29 @@ function stepBlock(key, sv, extra = '', cat = '') {
     ${fq ? `<span class="mute">${matches ? `${curIdx + 1}/${matches}` : '0'}</span><button class="ghost" data-act="fprev" data-v="${key}">‹</button><button class="ghost" data-act="fnext" data-v="${key}">›</button>` : ''}
     <span class="mute">${text.split('\n').length} ${t('lines_')}</span></div>${body}</div>`;
 }
-function attachCards(media) {
+let _mediaRenderTimer = null;
+function scheduleMediaRender() {
+  clearTimeout(_mediaRenderTimer);
+  _mediaRenderTimer = setTimeout(() => { render(true); }, 80);
+}
+function attachCards(media, loadMedia = true) {
   if (!media?.length) return '';
   return `<div class="attach">${media.map((m) => {
-    const c = S.mediaCache[m.uri];
-    if (!c && c !== false) { S.mediaCache[m.uri] = false; api('/api/media', { id: S.d?.id || curId(), uri: m.uri }).then((r) => { S.mediaCache[m.uri] = r && r.dataUrl ? r : null; render(true); }).catch(() => { S.mediaCache[m.uri] = null; }); }
+    const hasEntry = Object.prototype.hasOwnProperty.call(S.mediaCache, m.uri);
+    const c = hasEntry ? S.mediaCache[m.uri] : null;
+    if (!hasEntry && loadMedia) {
+      S.mediaCache[m.uri] = { _loading: true };
+      api('/api/media', { id: S.d?.id || curId(), uri: m.uri })
+        .then((r) => {
+          if (r && r.dataUrl) {
+            S.mediaCache[m.uri] = r;
+            scheduleMediaRender();
+          } else {
+            S.mediaCache[m.uri] = { _missing: true };
+          }
+        })
+        .catch(() => { S.mediaCache[m.uri] = { _missing: true }; });
+    }
     return `<div class="acard" ${c?.dataUrl ? `data-act="zoom" data-v="${esc(m.uri)}"` : ''} title="${esc(m.uri)}">
       ${c?.dataUrl ? `<img src="${c.dataUrl}">` : `<span class="glyph">IMG</span>`}
       <div style="min-width:0"><div style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:600">${esc(m.uri.split('/').pop() || short(m.uri))}</div>
@@ -894,12 +933,13 @@ function treemapSvg(items) {
     `<g data-act="mapjump" data-v="${r.cat}|${r.step}" style="cursor:pointer"><rect x="${r.x + 1}" y="${r.y + 1}" width="${Math.max(1, r.w - 2)}" height="${Math.max(1, r.h - 2)}" rx="3" fill="var(--c-${r.cat})" opacity=".85"><title>${esc(r.label)} · ${r.n} ${t('items')} · ≈${K(r.tok)} (${P(r.tok / total)})</title></rect>
     ${r.w > 54 && r.h > 22 ? `<text x="${r.x + 6}" y="${r.y + 14}" style="fill:#fff;font-weight:600">${esc(r.label.slice(0, Math.floor(r.w / 7)))}</text><text x="${r.x + 6}" y="${r.y + 26}" style="fill:#fff;opacity:.85">${K(r.tok)}</text>` : ''}</g>`).join('')}</svg>`;
 }
-function itemRow(it, pos) {
+function itemRow(it, pos, loadMedia = true) {
   const key = 'b' + it.step + '_' + it.pos, sv = S.stepView[key];
+  const canLoadMedia = loadMedia || !!sv;
   const extra = (it.call ? `<div class="meta" style="margin-bottom:3px"><span class="chip">${esc(it.call)}</span>${it.provider ? `<span class="chip">${esc(it.provider)}</span>` : ''}<span class="chip ${it.ok === false ? 'fail' : 'ok'}">${it.ok === false ? t('errT') : t('okT')}</span><span>${it.lines || 0} ${t('lines_')}</span></div>` : '')
     + (it.args ? `<details><summary class="mute">${t('argsT')}</summary><pre>${esc(it.args)}</pre></details>` : '')
-    + attachCards(it.media);
-  return `<div class="item ${S.hlStep === it.step ? 'hl' : ''}" data-act="step" data-v="${key}|${it.step}" style="${pos != null ? 'grid-template-columns:44px 44px minmax(0,1fr) 54px' : ''}">${pos != null ? `<span class="mute">#${pos}</span>` : ''}<span class="mute">${pos != null ? `<span class="dot" style="background:var(--c-${it.cat})"></span>` : '#' + it.step}</span><span title="${esc(it.title)}">${it.media ? '🖼 ' : ''}${esc(it.title)}</span><b style="text-align:right;font-weight:500">${K(it.tok)}</b></div>${sv ? stepBlock(key, sv, extra, it.cat) : (it.media ? `<div class="detail">${attachCards(it.media)}</div>` : '')}`;
+    + attachCards(it.media, canLoadMedia);
+  return `<div class="item ${S.hlStep === it.step ? 'hl' : ''}" data-act="step" data-v="${key}|${it.step}" style="${pos != null ? 'grid-template-columns:44px 44px minmax(0,1fr) 54px' : ''}">${pos != null ? `<span class="mute">#${pos}</span>` : ''}<span class="mute">${pos != null ? `<span class="dot" style="background:var(--c-${it.cat})"></span>` : '#' + it.step}</span><span title="${esc(it.title)}">${it.media ? '🖼 ' : ''}${esc(it.title)}</span><b style="text-align:right;font-weight:500">${K(it.tok)}</b></div>${sv ? stepBlock(key, sv, extra, it.cat) : (it.media ? `<div class="detail">${attachCards(it.media, canLoadMedia)}</div>` : '')}`;
 }
 function viewBrowser(d) {
   const ks = d.series.map((p) => p[0]);
@@ -926,8 +966,9 @@ function viewBrowser(d) {
       body = mapHtml + `<div class="row"><span><span class="dot" style="background:var(--c-base)"></span> ${t('base')}</span><b>≈ ${K(B)}</b></div>` + cats.map(([c, sm]) => {
         let list = by[c].slice();
         if (S.bsort === 'size') list.sort((a, b) => b.tok - a.tok);
-        return `<details ${S.openCat === c ? 'open' : ''} data-cat="${c}"><summary><span class="dot" style="background:var(--c-${c})"></span>${cLabel(c)} <span class="mute">${list.length}</span> ${diffBadge(c)}<b>${K(sm)} · ${P(sm / total)}</b></summary>
-          ${(() => { const sub = list.slice(0, 120); if (S.hlStep && !sub.some((x) => x.step === S.hlStep)) { const m = list.find((x) => x.step === S.hlStep); if (m) sub.unshift(m); } return sub.map((it) => itemRow(it)).join(''); })()}
+        const catOpen = S.openCat === c;
+        return `<details ${catOpen ? 'open' : ''} data-cat="${c}"><summary><span class="dot" style="background:var(--c-${c})"></span>${cLabel(c)} <span class="mute">${list.length}</span> ${diffBadge(c)}<b>${K(sm)} · ${P(sm / total)}</b></summary>
+          ${(() => { const sub = list.slice(0, 120); if (S.hlStep && !sub.some((x) => x.step === S.hlStep)) { const m = list.find((x) => x.step === S.hlStep); if (m) sub.unshift(m); } return sub.map((it) => itemRow(it, null, catOpen)).join(''); })()}
           ${list.length > 120 ? `<div class="mute" style="padding-left:16px">… ${list.length - 120}</div>` : ''}</details>`;
       }).join('');
     }
@@ -1033,8 +1074,8 @@ function fleetEvents(f) {
 }
 function viewFleet(f) {
   const n = f.nodes;
-  if (n.length < 2) return `<div class="card empty">${t('noFleet')}</div>`;
   const evs = fleetEvents(f);
+  if (n.length < 2 && !f.isSwarm && evs.length === 0) return `<div class="card empty">${t('noFleet')}</div>`;
   const sumT = n.reduce((a, c) => ({ i: a.i + c.tokens.input, o: a.o + c.tokens.output }), { i: 0, o: 0 });
   const cost = n.reduce((a, c) => a + c.cost, 0);
   const tasks = evs.filter((e) => e.kind === 'delegate');
@@ -1042,8 +1083,11 @@ function viewFleet(f) {
   const sel = S.flAgent;
   const node = (c) => {
     const W = convWin(c);
+    const roleLabel = c.depth
+      ? (c.agentName || (c.teammate || f.isSwarm ? 'Swarm Worker' : t('sub')))
+      : (f.isSwarm ? 'Swarm Coordinator' : t('main'));
     return `<div class="card node ${c.depth ? '' : 'root'}" style="margin-left:${Math.min(c.depth, 4) * 18}px;${c.isCurrent ? 'border-color:var(--accent)' : ''}${sel === c.id ? ';outline:2px solid var(--accent)' : ''}">
-      <div style="display:flex;gap:6px;align-items:center"><span class="chip">${c.depth ? (c.agentName || (c.teammate ? 'teammate' : t('sub'))) : t('main')}</span>${c.running ? '<span class="pulse" title="running"></span>' : `<span class="mute">${t('idle')}</span>`}
+      <div style="display:flex;gap:6px;align-items:center"><span class="chip ${f.isSwarm ? 'bg' : ''}">${esc(roleLabel)}</span>${c.running ? '<span class="pulse" title="running"></span>' : `<span class="mute">${t('idle')}</span>`}
       ${c.model ? `<span class="chip">${esc(c.model.replace(/\s*\([^)]+\)/, ''))}</span>` : ''}
       <b style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;cursor:pointer" data-act="flagent" data-v="${c.id}" title="${esc(c.title)}">${esc(c.title || c.id)}</b>
       <button class="ghost" data-act="openconv" data-v="${c.id}">${t('openCtx')}</button><button class="ghost" data-act="openchat" data-v="${c.id}">${t('openChat')}</button></div>
@@ -1068,7 +1112,8 @@ function viewFleet(f) {
   const q = S.flQ.toLowerCase();
   const stream = evs.map((e, i) => [e, i]).filter(([e]) => (S.flKind === 'all' || e.kind === S.flKind) && (!sel || e.node === sel || e.peer === sel) && (!q || (e.text + e.label).toLowerCase().includes(q)));
   const kindL = { delegate: t('kDelegate'), in: t('kIn'), out: t('kOut') };
-  return `<div class="kpis">${kpi(t('agents'), n.length)}${kpi(t('running'), n.filter((x) => x.running).length)}${kpi(t('workItems'), tasks.length)}${kpi(t('messages'), msgs)}${kpi(t('fresh'), K(sumT.i), `${t('out')} ${K(sumT.o)}`)}${cost ? kpi(t('cost'), M(cost)) : ''}</div>
+  const swarmBanner = f.isSwarm ? `<div class="card" style="display:flex;align-items:center;gap:8px;padding:8px 12px"><span class="chip bg">Swarm</span><b>${esc(f.swarmTitle || (n[0] && n[0].title) || 'Swarm Session')}</b><span class="mute">${n.length} ${t('agents')}</span></div>` : '';
+  return `${swarmBanner}<div class="kpis">${kpi(t('agents'), n.length)}${kpi(t('running'), n.filter((x) => x.running).length)}${kpi(t('workItems'), tasks.length)}${kpi(t('messages'), msgs)}${kpi(t('fresh'), K(sumT.i), `${t('out')} ${K(sumT.o)}`)}${cost ? kpi(t('cost'), M(cost)) : ''}</div>
   <div class="card"><h2>${t('network')}${sel ? `<button class="ghost" data-act="flagent" data-v="${sel}">✕ ${esc((n.find((x) => x.id === sel) || {}).title || '').slice(0, 24)}</button>` : ''}</h2>${n.map(node).join('')}</div>
   <div class="card"><h2>${t('collab')}<span style="display:flex;gap:6px;flex-wrap:wrap">${seg([['earliest', t('earliest')], ['latest', t('latestOrd')]], S.flOrder, 'flord')}<button class="ghost ${S.flHide ? 'on' : ''}" data-act="flhide">${S.flHide ? `${t('showQuiet')} (${hiddenLanes})` : t('hideQuiet')}</button></span></h2>
     <div class="meta" style="margin-bottom:4px"><span><span class="dot" style="background:var(--accent)"></span> ${t('kDelegate')}</span><span><span class="dot" style="background:var(--good)"></span> ${t('kIn')}</span><span><span class="dot" style="background:var(--c-toolCalls)"></span> ${t('kOut')}</span><span>${when(t0)} → ${when(t1)}</span></div>
@@ -1344,6 +1389,36 @@ async function refreshAll() {
   if (ok) toast(t('refreshed'));
 }
 $('#refresh').addEventListener('click', refreshAll);
+let _lastScheme = '';
+function syncColorScheme() {
+  try {
+    const raw = getComputedStyle(document.documentElement).getPropertyValue('--background').trim();
+    let isDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (raw) {
+      const probe = document.createElement('span');
+      probe.style.color = raw;
+      document.body.appendChild(probe);
+      const rgb = getComputedStyle(probe).color.match(/\d+/g);
+      probe.remove();
+      if (rgb && rgb.length >= 3) {
+        const lum = (0.299 * +rgb[0] + 0.587 * +rgb[1] + 0.114 * +rgb[2]) / 255;
+        isDark = lum < 0.5;
+      }
+    }
+    const next = isDark ? 'dark' : 'light';
+    if (next === _lastScheme) return;
+    _lastScheme = next;
+    if (document.documentElement.style.colorScheme !== next) {
+      document.documentElement.style.colorScheme = next;
+    }
+    if (document.documentElement.dataset.theme !== next) {
+      document.documentElement.dataset.theme = next;
+    }
+  } catch {}
+}
+syncColorScheme();
+new MutationObserver(() => syncColorScheme()).observe(document.documentElement, { attributes: true, attributeFilter: ['style', 'class'] });
+if (window.matchMedia) window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', syncColorScheme);
 render();
 </script>
 </body>
